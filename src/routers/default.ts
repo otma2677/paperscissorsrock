@@ -5,11 +5,9 @@ import { Hono } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { tbValidator } from '@hono/typebox-validator';
 import { Type } from '@sinclair/typebox';
-import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { generatePassword } from '../core/crypt.js';
-import { Value } from '@sinclair/typebox/value';
-import { schemaUserDB, UserDB } from '../data/definition.database.js';
 import { randomBytes } from 'node:crypto';
+import { countPlayers, countPlayersActive, getUserByName, insertUser } from '../data/service.player.js';
 
 /**
  *
@@ -30,25 +28,10 @@ const schemaPostRegister = Type.Object({
 routerDefault
   .get('/', async c => c.html(await c.views.renderAsync('pages/index', {})))
   .get('/stats', async c => {
-    // Total players
-    const rowsTotalPlayers = await c
-      .mysql
-      .query('SELECT count(*) FROM users') as Array<RowDataPacket>;
+    const countTotalPlayers = await countPlayers(c.mysql);
+    const countActivePlayers = await countPlayersActive(c.mysql);
 
-    const rowTotalPlayers = rowsTotalPlayers[0] as Array<unknown>;
-    const countTotalPlayer = rowTotalPlayers[0] as Record<string, any>;
-
-    // Active players
-    const rowsActivePlayers = await c
-      .mysql
-      .query(
-        'select count(*) from users where timestampdiff(minute, created_at, current_timestamp) <= 15'
-      ) as Array<RowDataPacket>;
-
-    const rowActivePlayers = rowsActivePlayers[0] as Array<unknown>;
-    const countActivePlayers = rowActivePlayers[0] as Record<string, any>;
-
-    const allRequestResultsValid = rowsActivePlayers && countActivePlayers;
+    const allRequestResultsValid = countTotalPlayers && countActivePlayers;
     if (!allRequestResultsValid) {
       c.status(500);
       return c
@@ -57,17 +40,17 @@ routerDefault
 
     return c
       .html(c.views.renderAsync('pages/stats', {
-        playersTotal: countTotalPlayer['count(*)'],
-        playersConnected: countActivePlayers['count(*)']
+        playersTotal: countTotalPlayers,
+        playersConnected: countActivePlayers,
+        gamesCurrently: c.games.size
       }));
   })
   .get('/login', async c => c.html(await c.views.renderAsync('pages/login', {})))
   .post('/login', tbValidator('form', schemaPostLogin), async c => {
     const data = c.req.valid('form');
-    const rows = await c.mysql
-      .query('SELECT * FROM users WHERE name = ?', [ data.name ]) as Array<RowDataPacket>;
+    const user = await getUserByName(data, c.mysql);
 
-    if (rows[0]?.length === 0) {
+    if (!user) {
       c.status(404);
       return c
         .html(c.views.renderAsync('pages/login', {
@@ -78,18 +61,6 @@ routerDefault
         }));
     }
 
-    if (!Value.Check(schemaUserDB, rows[0]?.at(0))) {
-      c.status(500);
-      return c
-        .html(c.views.renderAsync('pages/login', {
-          error: {
-            message: 'Services unavailable. Please retry later.'
-          },
-          form: data
-        }));
-    }
-
-    const user = rows[0]?.at(0) as UserDB;
     const password = await generatePassword(data.password, user.salt);
     if (user.pass !== password.bytesFinal.toString('hex')) {
       c.status(400);
@@ -140,10 +111,9 @@ routerDefault
         }));
     }
 
-    const rows = await c.mysql
-      .query('SELECT * FROM users WHERE name = ?', [ data.name ]) as Array<RowDataPacket>;
+    const user = await getUserByName(data, c.mysql);
 
-    if (rows[0]?.at(0)) {
+    if (user) {
       c.status(400);
       return c
         .html(c.views.renderAsync('pages/register', {
@@ -154,18 +124,17 @@ routerDefault
         }));
     }
 
-    const password = await generatePassword(data.password);
-    const inserted = await c.mysql
-      .query(
-        'INSERT INTO users(name, pass, salt) VALUES(?, ?, ?)',
-        [
-          data.name,
-          password.bytesFinal.toString('hex'),
-          password.bytesSalt.toString('hex')
-        ]
-      ) as Array<ResultSetHeader>;
+    const passAndSalt = await generatePassword(data.password);
+    const inserted = await insertUser(
+      {
+        name: data.name,
+        pass: passAndSalt.bytesFinal.toString('hex'),
+        salt: passAndSalt.bytesSalt.toString('hex')
+      },
+      c.mysql
+    );
 
-    if (inserted[0]?.affectedRows === 0) {
+    if (inserted.affectedRows === 0) {
       c.status(500);
       return c
         .html(c.views.renderAsync('pages/register', {
