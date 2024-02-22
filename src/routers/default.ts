@@ -39,11 +39,15 @@ routerDefault
         .html(c.views.renderAsync('pages/internal-server-error', {}));
     }
 
+    const sid = getCookie(c, 'sid') ?? '';
+    const auth = c.session.has(sid);
+
     return c
       .html(c.views.renderAsync('pages/stats', {
         playersTotal: countTotalPlayers,
         playersConnected: countActivePlayers,
-        gamesCurrently: c.games.size
+        gamesCurrently: c.games.size,
+        auth
       }));
   })
   .get('/login', async c => c.html(await c.views.renderAsync('pages/login', {})))

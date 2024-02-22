@@ -1,4 +1,8 @@
-<% layout('../layouts/main-layout.eta', { title: 'Home' }) %>
+<% if (it.auth) { %>
+  <% layout('../layouts/auth-layout.eta', { title: 'Statistics' }) %>
+<% } else { %>
+  <% layout('../layouts/main-layout.eta', { title: 'Statistics' }) %>
+<% } %>
 
 <article>
   <header>
