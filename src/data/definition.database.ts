@@ -33,6 +33,15 @@ create table if not exists users
   .replaceAll('\n', '');
 
 /**
+ * Games
+ */
+export const schemaGameDB = Type.Object({
+
+});
+
+export type GameDB = Static<typeof schemaGameDB>;
+
+/**
  * Connections
  */
 export const schemaConnectionDB = Type.Object({

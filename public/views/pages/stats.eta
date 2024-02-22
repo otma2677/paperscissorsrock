@@ -1,0 +1,22 @@
+<% layout('../layouts/main-layout.eta', { title: 'Home' }) %>
+
+<article>
+  <header>
+    <h1>
+      Statistics
+    </h1>
+  </header>
+
+  <table>
+    <tbody>
+    <tr>
+      <th scope="row">Total players</th>
+      <td><%= it.playersTotal %></td>
+    </tr>
+    <tr>
+      <th scope="row">Players Connected</th>
+      <td><%= it.playersConnected %></td>
+    </tr>
+    </tbody>
+  </table>
+</article>

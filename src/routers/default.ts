@@ -29,6 +29,38 @@ const schemaPostRegister = Type.Object({
 
 routerDefault
   .get('/', async c => c.html(await c.views.renderAsync('pages/index', {})))
+  .get('/stats', async c => {
+    // Total players
+    const rowsTotalPlayers = await c
+      .mysql
+      .query('SELECT count(*) FROM users') as Array<RowDataPacket>;
+
+    const rowTotalPlayers = rowsTotalPlayers[0] as Array<unknown>;
+    const countTotalPlayer = rowTotalPlayers[0] as Record<string, any>;
+
+    // Active players
+    const rowsActivePlayers = await c
+      .mysql
+      .query(
+        'select count(*) from users where timestampdiff(minute, created_at, current_timestamp) <= 15'
+      ) as Array<RowDataPacket>;
+
+    const rowActivePlayers = rowsActivePlayers[0] as Array<unknown>;
+    const countActivePlayers = rowActivePlayers[0] as Record<string, any>;
+
+    const allRequestResultsValid = rowsActivePlayers && countActivePlayers;
+    if (!allRequestResultsValid) {
+      c.status(500);
+      return c
+        .html(c.views.renderAsync('pages/internal-server-error', {}));
+    }
+
+    return c
+      .html(c.views.renderAsync('pages/stats', {
+        playersTotal: countTotalPlayer['count(*)'],
+        playersConnected: countActivePlayers['count(*)']
+      }));
+  })
   .get('/login', async c => c.html(await c.views.renderAsync('pages/login', {})))
   .post('/login', tbValidator('form', schemaPostLogin), async c => {
     const data = c.req.valid('form');

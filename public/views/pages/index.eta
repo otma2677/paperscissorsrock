@@ -1,3 +1,9 @@
 <% layout('../layouts/main-layout.eta', { title: 'Home' }) %>
 
 <h1>Hello home</h1>
+<p>
+  A online Player versus Player Paper Scissors Game.
+</p>
+<p>
+  You don't need an email to register yourself.
+</p>
