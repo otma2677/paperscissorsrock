@@ -9,7 +9,7 @@ import { randomBytes, pbkdf2 } from 'node:crypto';
  */
 export const pbkdf2Async = promisify(pbkdf2);
 
-export async function generatePassword(password: string, salt?: string, iterations = 100_000) {
+export async function generatePassword(password: string, salt?: string, iterations = 210_000) {
   const bytesPassword = Buffer.from(password);
   const bytesSalt = salt ? Buffer.from(salt, 'hex') : randomBytes(64);
   const bytesFinal = await pbkdf2Async(
