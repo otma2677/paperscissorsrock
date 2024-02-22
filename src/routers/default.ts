@@ -31,7 +31,8 @@ routerDefault
     const countTotalPlayers = await countPlayers(c.mysql);
     const countActivePlayers = await countPlayersActive(c.mysql);
 
-    const allRequestResultsValid = countTotalPlayers && countActivePlayers;
+    const allRequestResultsValid = typeof countTotalPlayers === 'number' &&
+      typeof countActivePlayers === 'number';
     if (!allRequestResultsValid) {
       c.status(500);
       return c
