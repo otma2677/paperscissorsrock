@@ -16,7 +16,6 @@ import { viewRenderer } from './middlewares/view-renderer.js';
 import { gameManager } from './middlewares/game-manager.js';
 import { sessionManager } from './middlewares/session-manager.js';
 import { mysql } from './middlewares/mysql.js';
-import { authManager } from './middlewares/auth-manager.js';
 import { routerPlayer } from './routers/player.js';
 
 /**
