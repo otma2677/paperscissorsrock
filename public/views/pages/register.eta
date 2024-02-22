@@ -1,0 +1,79 @@
+<% layout('../layouts/main-layout.eta', { title: 'Registration' }) %>
+
+<article>
+  <header>
+    <h1>Registration</h1>
+  </header>
+
+  <form id="form" method="post" action="/register">
+    <fieldset>
+      <label>
+        Name
+        <input
+          type="text"
+          name="name"
+          id="name"
+          minlength="5"
+          maxlength="64"
+          placeholder="Name"
+          required
+          value="<%= it?.form?.name ? it.form.name : '' %>"
+        />
+
+        <small style="color: darkred;"><%= it?.error?.name ? it.error.name : '' %></small>
+      </label>
+
+      <label>
+        Password
+        <input
+          type="password"
+          name="password"
+          id="password"
+          minlength="8"
+          maxlength="64"
+          placeholder="Password"
+          required
+          value="<%= it?.form?.password ? it.form.password : '' %>"
+        />
+
+        <small style="color: darkred;"><%= it?.error?.password ? it.error.password : '' %></small>
+      </label>
+
+      <label>
+        Password Confirmation
+        <input
+          type="password"
+          name="passwordConfirmation"
+          id="passwordConfirmation"
+          minlength="8"
+          maxlength="64"
+          placeholder="Password Confirmation"
+          required
+          value="<%= it?.form?.passwordConfirmation ? it.form.passwordConfirmation : '' %>"
+        />
+
+        <small style="color: darkred;"><%= it?.error?.passwordConfirmation ? it.error.passwordConfirmation : '' %></small>
+      </label>
+    </fieldset>
+
+    <button type="submit">Log in</button>
+  </form>
+
+  <footer>
+    <a href="/login">Want to log in ?</a>
+  </footer>
+
+  <% if (it?.error?.message) { %>
+  <footer>
+    <p style="color: darkred;">
+      <strong>
+        <%= it?.error?.message ? it.error.message : '' %>
+      </strong>
+    </p>
+  </footer>
+  <% } %>
+</article>
+
+<script>
+
+</script>

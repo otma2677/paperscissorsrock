@@ -1,0 +1,24 @@
+{
+  "name": "paperscissorsrock",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx --env-file=.env src/server.ts",
+    "watch": "tsx watch --env-file=.env src/server.ts"
+  },
+  "devDependencies": {
+    "@picocss/pico": "^2.0.3",
+    "@types/node": "^20.11.19",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.8.1",
+    "@hono/typebox-validator": "^0.2.2",
+    "@sinclair/typebox": "^0.31.28",
+    "eta": "^3.2.0",
+    "hono": "^4.0.5",
+    "mysql2": "^3.9.1"
+  }
+}

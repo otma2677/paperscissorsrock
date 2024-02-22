@@ -1,0 +1,3 @@
+<% layout('../layouts/main-layout.eta', { title: 'Home' }) %>
+
+<h1>Hello home</h1>

@@ -1,0 +1,72 @@
+<% layout('../layouts/main-layout.eta', { title: 'Log in' }) %>
+
+<article>
+  <header>
+    <h1>Log in</h1>
+  </header>
+
+  <form id="form" method="post" action="/login">
+    <fieldset>
+      <label>
+        Name
+        <input
+          type="text"
+          name="name"
+          id="name"
+          minlength="5"
+          maxlength="64"
+          placeholder="Name"
+          required
+          value="<%= it?.form?.name ? it.form.name : '' %>"
+        />
+
+        <small style="color: darkred;"><%= it?.error?.name ? it.error.name : '' %></small>
+      </label>
+      <label>
+        Password
+        <input
+          type="password"
+          name="password"
+          id="password"
+          minlength="8"
+          maxlength="64"
+          placeholder="Password"
+          required
+          value="<%= it?.form?.password ? it.form.password : '' %>"
+        />
+
+        <small style="color: darkred;"><%= it?.error?.password ? it.error.password : '' %></small>
+      </label>
+    </fieldset>
+
+    <button type="submit">Log in</button>
+  </form>
+
+  <footer>
+    <a href="/register">Register first ?</a>
+  </footer>
+
+  <% if (it?.error?.message) { %>
+  <footer>
+    <p style="color: darkred;">
+      <strong>
+        <%= it?.error?.message ? it.error.message : '' %>
+      </strong>
+    </p>
+  </footer>
+  <% } %>
+
+  <% if (it?.message) { %>
+  <footer>
+    <p style="color: darkgreen;">
+      <strong>
+        <%= it?.message ? it?.message : '' %>
+      </strong>
+    </p>
+  </footer>
+  <% } %>
+</article>
+
+<script>
+
+</script>

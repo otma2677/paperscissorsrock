@@ -1,0 +1,9 @@
+<nav>
+  <ul>
+    <li><strong>PaperScissorsRock</strong></li>
+  </ul>
+  <ul>
+    <li><a href="/player/profile">Profile</a></li>
+    <li><a href="/logout">Log out</a></li>
+  </ul>
+</nav>

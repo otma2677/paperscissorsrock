@@ -1,0 +1,9 @@
+<nav>
+  <ul>
+    <li><strong>PaperScissorsRock</strong></li>
+  </ul>
+  <ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="/login">Login</a></li>
+  </ul>
+</nav>
