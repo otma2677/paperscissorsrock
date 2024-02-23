@@ -8,6 +8,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { type ConnectionOptions } from 'mysql2/promise';
+import { WebSocketServer } from 'ws';
 
 // Internals
 import { routerGame } from './routers/game.js';
@@ -17,6 +18,7 @@ import { gameManager } from './middlewares/game-manager.js';
 import { sessionManager } from './middlewares/session-manager.js';
 import { mysql } from './middlewares/mysql.js';
 import { routerPlayer } from './routers/player.js';
+import { waitingRoomManager } from './middlewares/waiting-room-manager.js';
 
 /**
  *
@@ -42,6 +44,7 @@ async function server(options: Options) {
     .use(viewRenderer())
     .use(mysql(options.mysqlOptions))
     .use(gameManager())
+    .use(waitingRoomManager())
     .use(sessionManager());
 
   // Routers
@@ -52,12 +55,12 @@ async function server(options: Options) {
     .route('/game', routerGame);
 
   // Listen
-  serve({
+  const server = serve({
     fetch: hono.fetch,
     port: options.port,
     hostname: options.host
-  }, app => {
-    console.log(`http://${app.address}:${app.port}`);
+  }, info => {
+    console.log(`http://${info.address}:${info.port}`);
   });
 }
 

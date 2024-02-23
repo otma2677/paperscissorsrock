@@ -1,0 +1,10 @@
+<% layout('../../layouts/auth-layout.eta', { title: 'Profile' }) %>
+
+<h1>Waiting room</h1>
+<p>
+  <%= it.room %>
+</p>
+
+<script>
+  const roomDate = new Date('<%= it.room %>')
+</script>

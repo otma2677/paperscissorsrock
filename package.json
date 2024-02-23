@@ -10,6 +10,7 @@
   "devDependencies": {
     "@picocss/pico": "^2.0.3",
     "@types/node": "^20.11.19",
+    "@types/ws": "^8.5.10",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3"
   },
@@ -19,6 +20,7 @@
     "@sinclair/typebox": "^0.31.28",
     "eta": "^3.2.0",
     "hono": "^4.0.5",
-    "mysql2": "^3.9.1"
+    "mysql2": "^3.9.1",
+    "ws": "^8.16.0"
   }
 }
