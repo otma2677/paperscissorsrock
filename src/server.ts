@@ -8,7 +8,6 @@ import { secureHeaders } from 'hono/secure-headers';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { type ConnectionOptions } from 'mysql2/promise';
-import { WebSocketServer } from 'ws';
 
 // Internals
 import { routerGame } from './routers/game.js';
