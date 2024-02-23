@@ -34,10 +34,10 @@ routerGame
           data: 'Searching an opponent ... ' + c.room.size,
         });
 
+        await stream.sleep(1000);
+
         if (!c.room.has(c.user?.public_id as string))
           break;
-
-        await stream.sleep(1000);
       }
 
       await stream.close();

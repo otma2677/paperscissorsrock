@@ -33,11 +33,10 @@
   const stopBtn = document.getElementById('stop');
   let eventSource;
 
-  searchBtn?.addEventListener('click', event => {
+  searchBtn?.addEventListener('click', async event => {
     startSearchUI();
     clearMessages();
-
-    eventSource = new EventSource('/game' + '<%= it.path %>');
+    await startEvent();
   });
 
   stopBtn?.addEventListener('click', event => {
@@ -47,27 +46,29 @@
     eventSource?.close();
   });
 
-if (eventSource instanceof EventSource) {
-  eventSource.onerror = event => {
-    stopSearchUI();
-    clearMessages();
-    eventSource.close();
+  async function startEvent() {
+    eventSource = new EventSource('/game' + '<%= it.path %>');
 
-    if (eventSource.CLOSED) {
-      if (noOppSpan)
-        noOppSpan.innerText = 'No available opponents have been found.';
-    } else {
-      if (errorSpan)
-        errorSpan.innerText = 'Services unavailable, please retry later.';
+    if (eventSource instanceof EventSource) {
+      eventSource.onerror = event => {
+        stopSearchUI();
+        clearMessages();
+        eventSource.close();
+
+        if (eventSource.CLOSED) {
+          if (noOppSpan)
+            noOppSpan.innerText = 'No available opponents have been found.';
+        } else {
+          if (errorSpan)
+            errorSpan.innerText = 'Services unavailable, please retry later.';
+        }
+      };
+
+      eventSource.onopen = event => console.log('Connected');
+
+      eventSource.onmessage = event => console.log(event);
     }
-
-    eventSource = null;
-  };
-
-  eventSource.onopen = event => console.log('Connected');
-
-  eventSource.onmessage = event => console.log(event);
-}
+  }
 
   /**
    *

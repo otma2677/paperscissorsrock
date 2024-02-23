@@ -1,0 +1,25 @@
+<% layout('../../layouts/auth-layout.eta', { title: 'Waiting room' }) %>
+
+<article>
+  <header>
+    <h1>Game</h1>
+    <p>Players available: <%= it.opponent %></p>
+    <p>
+      Game countdown:
+      <span id="countdown">
+        <%= it.countdown %>
+      </span>
+    </p>
+  </header>
+</article>
+
+<script type="module">
+  setInterval(() => {
+    const countdown = document.getElementById('countdown');
+    if (countdown) {
+      const value = Number(countdown.innerText);
+      if (Number.isInteger(value))
+        countdown.innerText = value - 1;
+    }
+  }, 1000);
+</script>
