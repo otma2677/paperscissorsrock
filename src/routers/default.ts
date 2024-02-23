@@ -27,6 +27,7 @@ const schemaPostRegister = Type.Object({
 
 routerDefault
   .get('/', async c => c.html(await c.views.renderAsync('pages/index', {})))
+  .get('/privacy', async c => c.html(await c.views.renderAsync('pages/privacy', {})))
   .get('/stats', async c => {
     const countTotalPlayers = await countPlayers(c.mysql);
     const countActivePlayers = await countPlayersActive(c.mysql);

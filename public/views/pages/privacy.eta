@@ -1,0 +1,37 @@
+<% layout('../layouts/main-layout.eta', { title: 'Privacy' }) %>
+
+<h1>Privacy</h1>
+<h2>About your data</h2>
+<strong>Data Collection</strong>
+<p>
+  We could collect your IP to protect from spamming our services, though over a
+  certain amount of time, we anonymize such data.
+</p>
+<p>
+  We collect data using <a href="https://umami.is">Umami</a>, which is compliant
+  with your privacy.
+</p>
+
+<hr>
+
+<strong>Data Security</strong>
+<p>
+  The website uses <a href="https://letsencrypt.org/fr/">LetsEncrypt</a> to
+  generate and validate TLS certificate to communicate over internet.
+</p>
+<p>
+  Following the
+  <a href="https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html">OWASP</a>
+  guidelines concerning sensitive data storage, we use PBKDF2 with minimum defaults
+  required by OWASP. We did not use scrypt nor argon because the website is not
+  particularly "relevant", and more secure algorithms would be meaningless at the moment. <br>
+  Though, if we start enhancing the experience of the website, we plan to migrate
+  sensitive data hashing to a more robust solution.
+</p>
+
+<hr>
+
+<strong>Data sharing</strong>
+<p>
+  Data collected by us is not shared with any tier service.
+</p>
