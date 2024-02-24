@@ -10,14 +10,13 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { type ConnectionOptions } from 'mysql2/promise';
 
 // Internals
-import { routerGame } from './routers/game.js';
 import { routerDefault } from './routers/default.js';
+import { routerGame } from './routers/game.js';
+import { routerPlayer } from './routers/player.js';
 import { viewRenderer } from './middlewares/view-renderer.js';
 import { gameManager } from './middlewares/game-manager.js';
 import { sessionManager } from './middlewares/session-manager.js';
 import { mysql } from './middlewares/mysql.js';
-import { routerPlayer } from './routers/player.js';
-import { waitingRoomManager } from './middlewares/waiting-room-manager.js';
 
 /**
  *
@@ -43,7 +42,6 @@ async function server(options: Options) {
     .use(viewRenderer())
     .use(mysql(options.mysqlOptions))
     .use(gameManager())
-    .use(waitingRoomManager())
     .use(sessionManager());
 
   // Routers
