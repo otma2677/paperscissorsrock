@@ -18,12 +18,9 @@ export const schemaGame = Type.Object({
     dateP2: Type.Date()
   })),
   winner: Type.Optional(Type.Number()),
-  aborted: Type.Optional(
-    Type.Transform(Type.Number())
-      .Decode(v => v === 1)
-      .Encode(v => v ? 1 : 0)
-  ),
+  aborted: Type.Boolean(),
   ended_at: Type.Optional(Type.Date()),
+  ended: Type.Boolean(),
   details: Type.Unknown(),
 });
 

@@ -54,6 +54,11 @@ export const schemaGameDB = Type.Object({
       .Encode(v => v ? 1 : 0)
   ),
   ended_at: Type.Optional(Type.Date()),
+  ended: Type.Optional(
+    Type.Transform(Type.Number())
+      .Decode(v => v === 1)
+      .Encode(v => v ? 1 : 0)
+  ),
   details: Type.Unknown(),
 });
 
@@ -71,6 +76,7 @@ export const tableGameDB = `
       winner     int unsigned,
       aborted    boolean,
       ended_at   datetime,
+      ended boolean,
       details    json
   );
 `
