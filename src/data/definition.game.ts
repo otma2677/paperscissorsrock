@@ -9,8 +9,8 @@ import { type Static, Type } from '@sinclair/typebox';
 export const schemaGame = Type.Object({
   created_at: Type.Date(),
   public_id: Type.String(),
-  player1: Type.Union([ Type.String(), Type.Number() ]),
-  player2: Type.Union([ Type.String(), Type.Number() ]),
+  player1: Type.String(),
+  player2: Type.String(),
   rounds: Type.Array(Type.Object({
     moveP1: Type.Number(),
     dateP1: Type.Date(),
@@ -18,9 +18,17 @@ export const schemaGame = Type.Object({
     dateP2: Type.Date()
   })),
   winner: Type.Optional(Type.Number()),
-  aborted: Type.Boolean(),
+  aborted: Type.Optional(
+    Type.Transform(Type.Number())
+      .Decode(v => v === 1)
+      .Encode(v => v ? 1 : 0)
+  ),
   ended_at: Type.Optional(Type.Date()),
-  ended: Type.Boolean(),
+  ended: Type.Optional(
+    Type.Transform(Type.Number())
+      .Decode(v => v === 1)
+      .Encode(v => v ? 1 : 0)
+  ),
   details: Type.Unknown(),
 });
 

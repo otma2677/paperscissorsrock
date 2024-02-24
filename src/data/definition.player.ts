@@ -7,8 +7,7 @@ import { Type, type Static } from '@sinclair/typebox';
  *
  */
 export const schemaPlayer = Type.Object({
-  publicId: Type.String(),
-  privateId: Type.String(),
+  public_id: Type.String(),
   name: Type.String()
 });
 
