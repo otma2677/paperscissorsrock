@@ -1,15 +1,18 @@
 /**
  *
  */
+import { randomBytes } from 'node:crypto';
+
 import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { tbValidator } from '@hono/typebox-validator';
-import { Type } from '@sinclair/typebox';
-import { generatePassword } from '../core/crypt.js';
-import { randomBytes } from 'node:crypto';
-import { countPlayers, countPlayersActive, getUserByName, insertUser } from '../data/service.player.js';
-import { Value } from '@sinclair/typebox/value';
 import { RowDataPacket } from 'mysql2/promise';
+import { Type } from '@sinclair/typebox';
+import { Value } from '@sinclair/typebox/value';
+
+import { generatePassword } from '../core/crypt.js';
+import { countPlayers, countPlayersActive, getUserByName, insertUser } from '../data/service.player.js';
 
 /**
  *
@@ -36,7 +39,7 @@ const schemaParamPageStringToNumber = Type.Object({
 routerDefault
   .get('/', async c => c.html(await c.views.renderAsync('pages/index', {})))
   .get('/privacy', async c => c.html(await c.views.renderAsync('pages/privacy', {})))
-  .get('/games/:page', tbValidator('param', schemaParamPageStringToNumber), async c => {
+  .get('/game/:page', tbValidator('param', schemaParamPageStringToNumber), async c => {
     const param = Value.Decode(schemaParamPageStringToNumber, c.req.valid('param'));
     const size = 50;
     const offset = param.page * size;
@@ -44,10 +47,9 @@ routerDefault
     const countSelectQuery = await c.mysql.query('SELECT count(*) FROM games') as Array<RowDataPacket>;
     const count = countSelectQuery[0]?.[0]?.['count(*)'] as number | undefined;
 
-    if (!Number.isInteger(count)) {
-      c.status(500);
-      return c.html(c.views.renderAsync('pages/unauthorized', {}));
-    }
+    if (!Number.isInteger(count))
+      throw new HTTPException(500, { message: 'Internal Server Error' });
+
 
     const rows = await c
       .mysql
@@ -59,7 +61,10 @@ routerDefault
         ]
       ) as Array<RowDataPacket>;
 
-    return c.html(c.views.renderAsync('pages/game/games', { games: rows[0], auth: c.user ?? false }));
+    const sid = getCookie(c, 'sid') ?? '';
+    const auth = c.session.has(sid);
+
+    return c.html(c.views.renderAsync('pages/games', { games: rows[0], auth }));
   })
   .get('/stats', async c => {
     const countTotalPlayers = await countPlayers(c.mysql);
@@ -67,11 +72,8 @@ routerDefault
 
     const allRequestResultsValid = typeof countTotalPlayers === 'number' &&
       typeof countActivePlayers === 'number';
-    if (!allRequestResultsValid) {
-      c.status(500);
-      return c
-        .html(c.views.renderAsync('pages/internal-server-error', {}));
-    }
+    if (!allRequestResultsValid)
+      throw new HTTPException(500, { message: 'Internal Server Error' });
 
     const sid = getCookie(c, 'sid') ?? '';
     const auth = c.session.has(sid);
@@ -125,7 +127,7 @@ routerDefault
       httpOnly: true,
     })
 
-    return c.redirect('/player/profile');
+    return c.redirect('/players/profile');
   })
   .get('/logout', async c => {
     const sid = getCookie(c, 'sid');
@@ -173,16 +175,8 @@ routerDefault
       c.mysql
     );
 
-    if (inserted.affectedRows === 0) {
-      c.status(500);
-      return c
-        .html(c.views.renderAsync('pages/register', {
-          error: {
-            message: 'Services unavailable. Please retry later.'
-          },
-          form: data
-        }));
-    }
+    if (inserted.affectedRows === 0)
+      throw new HTTPException(500, { message: 'Internal Server Error' });
 
     return c.html(await c.views.renderAsync('pages/login', {
       message: 'You are registered, you can now log in'

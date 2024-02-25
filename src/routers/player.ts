@@ -11,4 +11,4 @@ export const routerPlayer = new Hono();
 
 routerPlayer
   .use(authManager())
-  .get('/profile', async c => c.html(await c.views.renderAsync('pages/player/profile', { user: c.user })));
+  .get('/profile', async c => c.html(await c.views.renderAsync('pages/players/profile', { user: c.user })));

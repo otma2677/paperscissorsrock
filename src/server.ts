@@ -17,6 +17,8 @@ import { viewRenderer } from './middlewares/view-renderer.js';
 import { gameManager } from './middlewares/game-manager.js';
 import { sessionManager } from './middlewares/session-manager.js';
 import { mysql } from './middlewares/mysql.js';
+import { errorHandler } from './handlers/errors.js';
+import { notFoundHandler } from './handlers/not-found.js';
 
 /**
  *
@@ -46,10 +48,11 @@ async function server(options: Options) {
 
   // Routers
   hono
-    .notFound(async c => c.html(await c.views.renderAsync('./pages/not-found', {})))
+    .notFound(notFoundHandler)
+    .onError(errorHandler)
     .route('/', routerDefault)
-    .route('/player', routerPlayer)
-    .route('/game', routerGame);
+    .route('/players', routerPlayer)
+    .route('/games', routerGame);
 
   // Listen
   const server = serve({

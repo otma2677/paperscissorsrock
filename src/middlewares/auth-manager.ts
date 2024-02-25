@@ -2,10 +2,13 @@
  *
  */
 import { randomBytes } from 'node:crypto';
+
 import { type MiddlewareHandler } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
-import { UserDB } from '../data/definition.database.js';
+import { HTTPException } from 'hono/http-exception';
 import { ResultSetHeader } from 'mysql2/promise';
+
+import { UserDB } from '../data/definition.database.js';
 
 /**
  *
@@ -13,17 +16,13 @@ import { ResultSetHeader } from 'mysql2/promise';
 export function authManager(): MiddlewareHandler {
   return async function (c, next) {
     const sid = getCookie(c, 'sid');
-    if (!sid) {
-      c.status(403);
-      return c.html(c.views.renderAsync('pages/unauthorized', {}))
-    }
+    if (!sid)
+      throw new HTTPException(401, { message: 'Unauthorized' });
 
     const maybeUser = c.session.get(sid);
     if (!maybeUser) {
       deleteCookie(c, 'sid');
-      c.status(401);
-      return c
-        .html(c.views.renderAsync('pages/unauthorized', {}))
+      throw new HTTPException(401, { message: 'Unauthorized' });
     }
 
     // Update the session id
@@ -44,9 +43,7 @@ export function authManager(): MiddlewareHandler {
       ) as Array<ResultSetHeader>;
 
     if (!inserted[0] || (inserted[0]?.['affectedRows'] === 0)) {
-      c.status(500);
-      return c
-        .html(c.views.renderAsync('pages/internal-server-error', {}))
+      throw new Error('Internal server error');
     }
 
     await next();

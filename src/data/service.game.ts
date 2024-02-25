@@ -2,7 +2,19 @@
  *
  */
 import { type Context } from 'hono';
-import { GameMiddleware } from '../middlewares/game-manager.js';
+import { GameMiddleware, Room } from '../middlewares/game-manager.js';
+
+/**
+ * CREATE A GAME
+ */
+export async function serviceCreateGame(c: Context, room: Room) {
+  const user = c.user;
+  if (!user) return;
+
+  if (!room.player2) return;
+
+
+}
 
 /**
  * CREATE NEW ROOM OR FIND OPENED ROOM
@@ -32,26 +44,26 @@ export async function serviceFindRoom(c: Context) {
   const roomID = c.userCurrentRoomID;
   if (roomID) return;
 
-  let game: GameMiddleware | undefined;
+  let roomKey: string | undefined;
+  let roomVal: Room | undefined;
+  for (const [ k, v ] of c.rooms) {
+    if (v.player1 && !v.player2) {
+      roomKey = k;
+      roomVal = v;
+      c.rooms.delete(k);
 
-  c.rooms.forEach((v, k, m) => {
-    if (!v.player2 && v.player1) {
-      game = {
-        created_at: new Date(),
-        public_id: crypto.randomUUID(),
-        player1: v.player1,
-        player2: user.public_id,
-        rounds: [],
-      };
+      break;
     }
-  });
+  }
 
-  if (!game) return;
+  if (!roomVal || !roomKey) return;
 
-  const uuid = crypto.randomUUID();
-  c.games.set(uuid, game);
+  roomVal.player2 = user.public_id;
 
-  return uuid;
+  return {
+    key: roomKey,
+    value: roomVal
+  };
 }
 
 /**
@@ -60,6 +72,17 @@ export async function serviceFindRoom(c: Context) {
 export async function serviceUpdateRoomState(c: Context) {
   const user = c.user;
   if (!user) return;
+
+  const gameID = c.userCurrentGameID;
+  if (gameID) {
+    const game = c.games.get(gameID);
+    if (game) {
+      if ((Date.now() - game.created_at.getTime()) <= (1000 * 60) * 5) {
+        c.userCurrentRoomID = undefined;
+        return;
+      }
+    }
+  }
 
   const roomID = c.userCurrentRoomID;
   if (!roomID) return;
