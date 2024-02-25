@@ -3,25 +3,11 @@
 <article>
   <header>
     <h1>Waiting room</h1>
-    <p>Players available: <%= it.size %></p>
-    <span id="errMessage" style="color: darkred;"></span>
-    <span id="noOppMessage" style="color: darkblue;"></span>
+    <strong><%= it.id %></strong>
+    <strong><%= it.room %></strong>
   </header>
 
-  <header>
-    <div role="group">
-      <button id="search">Search</button>
-      <button class="outline" id="stop" disabled>Stop</button>
-    </div>
-  </header>
 
-  <div id="alert" aria-busy="false" style="display: none;">
-    ... searching for opponent
-
-    <div id="data">
-
-    </div>
-  </div>
 </article>
 
 <!--<script type="module">-->

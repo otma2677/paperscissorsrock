@@ -8,6 +8,7 @@ import { HTTPException } from 'hono/http-exception';
  *
  */
 export const errorHandler: ErrorHandler = async function (err, c) {
+  console.error(err);
   if (!(err instanceof HTTPException)) {
     c.status(500);
     return c.html(

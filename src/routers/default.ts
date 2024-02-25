@@ -38,6 +38,7 @@ const schemaParamPageStringToNumber = Type.Object({
 
 routerDefault
   .get('/', async c => c.html(await c.views.renderAsync('pages/index', {})))
+  .get('/contact', async c => c.html(await c.views.renderAsync('pages/contact', {})))
   .get('/privacy', async c => c.html(await c.views.renderAsync('pages/privacy', {})))
   .get('/game/:page', tbValidator('param', schemaParamPageStringToNumber), async c => {
     const param = Value.Decode(schemaParamPageStringToNumber, c.req.valid('param'));
@@ -86,7 +87,16 @@ routerDefault
         auth
       }));
   })
-  .get('/login', async c => c.html(await c.views.renderAsync('pages/login', {})))
+  .get('/login', async c => {
+    const sid = getCookie(c, 'sid');
+    if (sid) {
+      const session = c.session.get(sid);
+      if (session)
+        return c.redirect('/players/profile');
+    }
+
+    return c.html(await c.views.renderAsync('pages/login', {}))
+  })
   .post('/login', tbValidator('form', schemaPostLogin), async c => {
     const data = c.req.valid('form');
     const user = await getUserByName(data, c.mysql);

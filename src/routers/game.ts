@@ -10,7 +10,7 @@ import { Type } from '@sinclair/typebox';
 import { authManager } from '../middlewares/auth-manager.js';
 import { UserDB } from '../data/definition.database.js';
 import { Room } from '../middlewares/game-manager.js';
-import { serviceCreateARoom, serviceFindRoom } from '../data/service.game.js';
+import { serviceCreateARoom } from '../data/service.game.js';
 
 /**
  *
@@ -28,7 +28,7 @@ routerGame
   .use(authManager())
   .all('/sse/*', async (c, next) => {
     c.res.headers.set('Content-Type', 'text/event-stream; charset=UTF-8');
-    c.res.headers.set('Cache-Control', 'no-cache');
+    // c.res.headers.set('Cache-Control', 'no-cache');
     c.res.headers.set('Connection', 'keep-alive');
 
     await next();
@@ -98,39 +98,39 @@ routerGame
       );
   })
   .get('/waiting', async c => {
-      const user = c.user as UserDB;
-
-      // In case already into a game, redirection to the game
-      const gameID = c.userCurrentGameID;
-      if (gameID)
-        return c.redirect(`/game/${gameID}`);
-
       let roomID = c.userCurrentRoomID;
-      let room: Room | undefined;
 
-      if (roomID)
-        room = c.rooms.get(roomID);
+      if (roomID) {
+        const room = c.rooms.get(roomID);
 
-      // Search for an opened room
-      // Or create a new one
-      const existingRoom = await serviceFindRoom(c);
-      if (existingRoom?.key) { // Search
-        room = existingRoom.value;
-        c.userCurrentRoomID = undefined;
+        if (room) {
+          return c.html(
+            c.views.renderAsync('pages/games/waiting-room', {
+              room: JSON.stringify(room),
+              size: c.rooms.size ?? null,
+              path: '/sse/waiting-room',
+              id: c.userCurrentRoomID
+            })
+          );
+        }
       }
 
-      const newRoomID = await serviceCreateARoom(c);
-      if (!newRoomID) {
-        return c.html(
-          c.views.renderAsync('pages/game/waiting-room', {
-            room: JSON.stringify(room),
-            size: c.rooms.size ?? null,
-            path: '/sse/waiting-room',
-          })
-        );
-      }
+      const uuid = crypto.randomUUID();
+      const room: Room = {
+        createdAt: new Date(),
+        player1: (c.user as UserDB).public_id
+      };
+      c.userCurrentRoomID = uuid;
+      c.rooms.set(uuid, room);
 
-      return c.notFound();
+      return c.html(
+        c.views.renderAsync('pages/games/waiting-room', {
+          room: JSON.stringify(room),
+          size: c.rooms.size ?? null,
+          path: '/sse/waiting-room',
+          id: c.userCurrentRoomID
+        })
+      );
     }
   )
 ;

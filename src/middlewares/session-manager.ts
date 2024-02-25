@@ -7,9 +7,9 @@ import { UserDB } from '../data/definition.database.js';
 /**
  *
  */
-export function sessionManager(): MiddlewareHandler {
-  const session = new Map<string, Pick<UserDB, 'id' | 'created_at' | 'public_id' | 'name'>>();
+const session = new Map<string, Pick<UserDB, 'id' | 'created_at' | 'public_id' | 'name'>>();
 
+export function sessionManager(): MiddlewareHandler {
   return async function (c, next) {
     c.session = session;
 

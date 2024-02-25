@@ -51,8 +51,8 @@ async function server(options: Options) {
     .notFound(notFoundHandler)
     .onError(errorHandler)
     .route('/', routerDefault)
-    .route('/players', routerPlayer)
-    .route('/games', routerGame);
+    .route('/games', routerGame)
+    .route('/players', routerPlayer);
 
   // Listen
   const server = serve({
