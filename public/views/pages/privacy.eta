@@ -1,4 +1,4 @@
-<% layout('../layouts/main-layout.eta', { title: 'Privacy' }) %>
+<% layout('../layouts/no-menu-layout.eta', { title: 'Privacy' }) %>
 
 <h1>Privacy</h1>
 <h2>About your data</h2>

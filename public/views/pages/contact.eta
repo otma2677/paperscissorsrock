@@ -1,0 +1,9 @@
+<% layout('../layouts/no-menu-layout.eta', { title: 'Contact' }) %>
+
+<article>
+  <header>
+    <h1>Contact</h1>
+  </header>
+
+
+</article>
