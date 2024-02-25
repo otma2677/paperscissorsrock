@@ -8,6 +8,8 @@ import { Type } from '@sinclair/typebox';
 import { generatePassword } from '../core/crypt.js';
 import { randomBytes } from 'node:crypto';
 import { countPlayers, countPlayersActive, getUserByName, insertUser } from '../data/service.player.js';
+import { Value } from '@sinclair/typebox/value';
+import { RowDataPacket } from 'mysql2/promise';
 
 /**
  *
@@ -25,9 +27,40 @@ const schemaPostRegister = Type.Object({
   passwordConfirmation: Type.String({ minLength: 8, maxLength: 64 }),
 });
 
+const schemaParamPageStringToNumber = Type.Object({
+  page: Type.Transform(Type.String())
+    .Decode(v => Number(v))
+    .Encode(v => String(v))
+});
+
 routerDefault
   .get('/', async c => c.html(await c.views.renderAsync('pages/index', {})))
   .get('/privacy', async c => c.html(await c.views.renderAsync('pages/privacy', {})))
+  .get('/games/:page', tbValidator('param', schemaParamPageStringToNumber), async c => {
+    const param = Value.Decode(schemaParamPageStringToNumber, c.req.valid('param'));
+    const size = 50;
+    const offset = param.page * size;
+
+    const countSelectQuery = await c.mysql.query('SELECT count(*) FROM games') as Array<RowDataPacket>;
+    const count = countSelectQuery[0]?.[0]?.['count(*)'] as number | undefined;
+
+    if (!Number.isInteger(count)) {
+      c.status(500);
+      return c.html(c.views.renderAsync('pages/unauthorized', {}));
+    }
+
+    const rows = await c
+      .mysql
+      .query(
+        'SELECT * FROM games ORDER BY created_at DESC LIMIT ? OFFSET ?',
+        [
+          size,
+          offset
+        ]
+      ) as Array<RowDataPacket>;
+
+    return c.html(c.views.renderAsync('pages/game/games', { games: rows[0], auth: c.user ?? false }));
+  })
   .get('/stats', async c => {
     const countTotalPlayers = await countPlayers(c.mysql);
     const countActivePlayers = await countPlayersActive(c.mysql);

@@ -1,0 +1,23 @@
+<% if (it.auth) { %>
+<% layout('../../layouts/auth-layout.eta', { title: 'Statistics' }) %>
+<% } else { %>
+<% layout('../../layouts/main-layout.eta', { title: 'Statistics' }) %>
+<% } %>
+
+<article>
+  <header>
+    <h1>Past games</h1>
+  </header>
+
+  <% if (it.games) { %>
+  <% if (it.games.length >= 1) { %>
+  <ul>
+    <% for (const game of it.games) { %>
+    <li><%= game.public_id %></li>
+    <% } %>
+  </ul>
+  <% } else { %>
+  <p>No games yet</p>
+  <% } %>
+  <% } %>
+</article>
