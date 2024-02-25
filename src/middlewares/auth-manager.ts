@@ -46,6 +46,18 @@ export function authManager(): MiddlewareHandler {
       throw new Error('Internal server error');
     }
 
+    if (c.user) {
+      c.rooms.forEach((v, k, m) => {
+        if ((v.player1 === c.user?.public_id) || (v.player2 === c.user?.public_id))
+          c.userCurrentRoomID = k;
+      });
+
+      c.games.forEach((v, k, m) => {
+        if ((v.player1 === c.user?.public_id) || (v.player2 === c.user?.public_id))
+          c.userCurrentGameID = k;
+      });
+    }
+
     await next();
   }
 }

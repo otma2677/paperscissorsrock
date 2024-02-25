@@ -68,15 +68,18 @@ export function gameManager(): MiddlewareHandler {
     await serviceUpdateGameStateAndDump(c);
     await serviceUpdateRoomState(c);
 
-    c.rooms.forEach((v, k, m) => {
-      if (v.player1 === c.user?.public_id || v.player2 === c.user?.public_id)
-        c.userCurrentRoomID = k;
-    })
+    const user = c.user;
+    if (user) {
+      c.rooms.forEach((v, k, m) => {
+        if ((v.player1 === user.public_id) || (v.player2 === user.public_id))
+          c.userCurrentRoomID = k;
+      });
+    }
 
-    c.games.forEach((v, k, m) => {
-      if (v.player1 === c.user?.public_id || v.player2 === c.user?.public_id)
-        c.userCurrentGameID = k;
-    });
+    // c.games.forEach((v, k, m) => {
+    //   if (v.player1 === c.user?.public_id)
+    //     c.userCurrentGameID = k;
+    // });
 
     await next();
   };
