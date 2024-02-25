@@ -1,0 +1,4 @@
+<% layout('../../layouts/main-layout.eta', { title: String(it.status) }) %>
+
+<h1><%= it.status %></h1>
+<p><%= it.message %></p>

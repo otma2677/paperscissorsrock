@@ -1,7 +1,7 @@
 <% if (it.auth) { %>
-<% layout('../layouts/auth-layout.eta', { title: 'Statistics' }) %>
+<% layout('../layouts/auth-layout.eta', { title: 'Past games' }) %>
 <% } else { %>
-<% layout('../layouts/main-layout.eta', { title: 'Statistics' }) %>
+<% layout('../layouts/main-layout.eta', { title: 'Past games' }) %>
 <% } %>
 
 <article>

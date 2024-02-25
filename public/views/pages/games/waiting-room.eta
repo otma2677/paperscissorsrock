@@ -24,89 +24,89 @@
   </div>
 </article>
 
-<script type="module">
-  const errorSpan = document.getElementById('errMessage');
-  const noOppSpan = document.getElementById('noOppMessage');
-  const data = document.getElementById('data');
-  const alert = document.getElementById('alert');
-  const searchBtn = document.getElementById('search');
-  const stopBtn = document.getElementById('stop');
-  let eventSource;
+<!--<script type="module">-->
+<!--  const errorSpan = document.getElementById('errMessage');-->
+<!--  const noOppSpan = document.getElementById('noOppMessage');-->
+<!--  const data = document.getElementById('data');-->
+<!--  const alert = document.getElementById('alert');-->
+<!--  const searchBtn = document.getElementById('search');-->
+<!--  const stopBtn = document.getElementById('stop');-->
+<!--  let eventSource;-->
 
-  searchBtn?.addEventListener('click', async event => {
-    startSearchUI();
-    clearMessages();
-    await startEvent();
-  });
+<!--  searchBtn?.addEventListener('click', async event => {-->
+<!--    startSearchUI();-->
+<!--    clearMessages();-->
+<!--    await startEvent();-->
+<!--  });-->
 
-  stopBtn?.addEventListener('click', event => {
-    stopSearchUI();
-    clearMessages();
+<!--  stopBtn?.addEventListener('click', event => {-->
+<!--    stopSearchUI();-->
+<!--    clearMessages();-->
 
-    eventSource?.close();
-  });
+<!--    eventSource?.close();-->
+<!--  });-->
 
-  async function startEvent() {
-    eventSource = new EventSource('/games' + '<%= it.path %>');
+<!--  async function startEvent() {-->
+<!--    eventSource = new EventSource('/games' + '<%= it.path %>');-->
 
-    if (eventSource instanceof EventSource) {
-      eventSource.onerror = event => {
-        stopSearchUI();
-        clearMessages();
-        eventSource.close();
+<!--    if (eventSource instanceof EventSource) {-->
+<!--      eventSource.onerror = event => {-->
+<!--        stopSearchUI();-->
+<!--        clearMessages();-->
+<!--        eventSource.close();-->
 
-        if (eventSource.CLOSED) {
-          if (noOppSpan)
-            noOppSpan.innerText = 'No available opponents have been found.';
-        } else {
-          if (errorSpan)
-            errorSpan.innerText = 'Services unavailable, please retry later.';
-        }
-      };
+<!--        if (eventSource.CLOSED) {-->
+<!--          if (noOppSpan)-->
+<!--            noOppSpan.innerText = 'No available opponents have been found.';-->
+<!--        } else {-->
+<!--          if (errorSpan)-->
+<!--            errorSpan.innerText = 'Services unavailable, please retry later.';-->
+<!--        }-->
+<!--      };-->
 
-      eventSource.onopen = event => console.log('Connected');
+<!--      eventSource.onopen = event => console.log('Connected');-->
 
-      eventSource.onmessage = event => console.log(event);
-    }
-  }
+<!--      eventSource.onmessage = event => console.log(event);-->
+<!--    }-->
+<!--  }-->
 
-  /**
-   *
-   */
-  async function sleep(time) {
-    return new Promise(resolve => {
-      setTimeout(() => resolve(), time);
-    });
-  }
+<!--  /**-->
+<!--   *-->
+<!--   */-->
+<!--  async function sleep(time) {-->
+<!--    return new Promise(resolve => {-->
+<!--      setTimeout(() => resolve(), time);-->
+<!--    });-->
+<!--  }-->
 
-  function clearMessages() {
-    if (noOppSpan) noOppSpan.innerHTML = '';
-    if (errorSpan) errorSpan.innerHTML = '';
-    if (data) data.innerHTML = '';
-  }
+<!--  function clearMessages() {-->
+<!--    if (noOppSpan) noOppSpan.innerHTML = '';-->
+<!--    if (errorSpan) errorSpan.innerHTML = '';-->
+<!--    if (data) data.innerHTML = '';-->
+<!--  }-->
 
-  function stopSearchUI() {
-    stopBtn.classList.add('outline');
-    stopBtn.disabled = true;
-    searchBtn.classList.remove('outline');
-    searchBtn.disabled = false;
-    if (alert) {
-      alert.setAttribute('aria-busy', 'false');
-      alert.style.display = 'none';
-    }
-  }
+<!--  function stopSearchUI() {-->
+<!--    stopBtn.classList.add('outline');-->
+<!--    stopBtn.disabled = true;-->
+<!--    searchBtn.classList.remove('outline');-->
+<!--    searchBtn.disabled = false;-->
+<!--    if (alert) {-->
+<!--      alert.setAttribute('aria-busy', 'false');-->
+<!--      alert.style.display = 'none';-->
+<!--    }-->
+<!--  }-->
 
-  function startSearchUI() {
-    searchBtn.classList.add('outline');
-    searchBtn.disabled = true;
-    stopBtn.classList.remove('outline');
-    stopBtn.disabled = false;
-    if (alert) {
-      alert.setAttribute('aria-busy', 'true');
-      alert.style.display = 'flex';
-    }
-  }
-</script>
+<!--  function startSearchUI() {-->
+<!--    searchBtn.classList.add('outline');-->
+<!--    searchBtn.disabled = true;-->
+<!--    stopBtn.classList.remove('outline');-->
+<!--    stopBtn.disabled = false;-->
+<!--    if (alert) {-->
+<!--      alert.setAttribute('aria-busy', 'true');-->
+<!--      alert.style.display = 'flex';-->
+<!--    }-->
+<!--  }-->
+<!--</script>-->
 
 <!--<% layout('../../layouts/auth-layout.eta', { title: 'Profile' }) %>-->
 
