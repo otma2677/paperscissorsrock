@@ -30,60 +30,17 @@ export async function serviceCreateARoom(c: Context) {
   const room = {
     createdAt: new Date(),
     player1: user.public_id
-  }
+  };
 
   c.rooms.set(newID, room);
 
-  return newID;
-}
-
-export async function serviceFindRoom(c: Context) {
-  const user = c.user;
-  if (!user) return;
-
-  const roomID = c.userCurrentRoomID;
-  if (roomID) return;
-
-  let roomKey: string | undefined;
-  let roomVal: Room | undefined;
-  for (const [ k, v ] of c.rooms) {
-    if (v.player1 && !v.player2) {
-      roomKey = k;
-      roomVal = v;
-      c.rooms.delete(k);
-
-      break;
-    }
-  }
-
-  if (!roomVal || !roomKey) return;
-
-  roomVal.player2 = user.public_id;
-
-  return {
-    key: roomKey,
-    value: roomVal
-  };
+  return { id: newID, room };
 }
 
 /**
  * UPDATE & DUMPS
  */
 export async function serviceUpdateRoomState(c: Context) {
-  const user = c.user;
-  if (!user) return;
-
-  const gameID = c.userCurrentGameID;
-  if (gameID) {
-    const game = c.games.get(gameID);
-    if (game) {
-      if ((Date.now() - game.created_at.getTime()) <= (1000 * 60) * 5) {
-        c.userCurrentRoomID = undefined;
-        return;
-      }
-    }
-  }
-
   const roomID = c.userCurrentRoomID;
   if (!roomID) return;
 
@@ -93,13 +50,11 @@ export async function serviceUpdateRoomState(c: Context) {
       c.userCurrentRoomID = undefined;
       c.rooms.delete(roomID);
     }
-  } else c.userCurrentGameID = undefined;
+  }
+
 }
 
 export async function serviceUpdateGameStateAndDump(c: Context) {
-  const user = c.user;
-  if (!user) return;
-
   const gameID = c.userCurrentGameID;
   if (!gameID) return;
 

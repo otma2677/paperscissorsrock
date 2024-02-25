@@ -51,11 +51,12 @@ export type GameMiddleware = Static<typeof schemaGameMiddleware>;
 /**
  *
  */
+const games = new Map<string, GameMiddleware>();
+const rooms = new Map<string, Room>();
+const moves = new Map<string, Move>();
+const temporaryZones = new Array<TemporaryZone>();
+
 export function gameManager(): MiddlewareHandler {
-  const games = new Map<string, GameMiddleware>();
-  const rooms = new Map<string, Room>();
-  const moves = new Map<string, Move>();
-  const temporaryZones = new Array<TemporaryZone>();
 
   return async function (c, next) {
     c.games = games;
@@ -66,6 +67,16 @@ export function gameManager(): MiddlewareHandler {
     // Clean existing State at each connection
     await serviceUpdateGameStateAndDump(c);
     await serviceUpdateRoomState(c);
+
+    c.rooms.forEach((v, k, m) => {
+      if (v.player1 === c.user?.public_id || v.player2 === c.user?.public_id)
+        c.userCurrentRoomID = k;
+    })
+
+    c.games.forEach((v, k, m) => {
+      if (v.player1 === c.user?.public_id || v.player2 === c.user?.public_id)
+        c.userCurrentGameID = k;
+    });
 
     await next();
   };
