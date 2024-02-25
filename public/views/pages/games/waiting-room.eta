@@ -47,7 +47,7 @@
   });
 
   async function startEvent() {
-    eventSource = new EventSource('/game' + '<%= it.path %>');
+    eventSource = new EventSource('/games' + '<%= it.path %>');
 
     if (eventSource instanceof EventSource) {
       eventSource.onerror = event => {
@@ -130,7 +130,7 @@
 <!--  const data = document.getElementById('data');-->
 <!--  const searchBtn = document.getElementById('search');-->
 <!--  const stopBtn = document.getElementById('stop');-->
-<!--  // let sourceEvent = new EventSource('/game' + '<%= it.path %>');-->
+<!--  // let sourceEvent = new EventSource('/games' + '<%= it.path %>');-->
 
 <!--  searchBtn?.addEventListener('click', event => {-->
 <!--    startEventing();-->
@@ -158,7 +158,7 @@
 <!--   */-->
 <!--  async function startEventing() {-->
 <!--    await sleep(1500);-->
-<!--    const sourceEvent = new EventSource('/game' + '<%= it.path %>');-->
+<!--    const sourceEvent = new EventSource('/games' + '<%= it.path %>');-->
 
 <!--    sourceEvent.onerror = event => {-->
 <!--      sourceEvent.close();-->

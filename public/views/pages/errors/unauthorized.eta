@@ -1,4 +1,4 @@
-<% layout('../layouts/main-layout.eta', { title: 'Unauthorized' }) %>
+<% layout('../../layouts/main-layout.eta', { title: 'Unauthorized' }) %>
 
 <h1>403</h1>
 <p>Unauthorized access</p>
