@@ -2,9 +2,8 @@
  *
  */
 import { type MiddlewareHandler } from 'hono';
-import { type Game, schemaGame } from '../data/definition.game.js';
+import { schemaGame } from '../data/definition.game.js';
 import { type Static, Type } from '@sinclair/typebox';
-import { type Player, schemaPlayer } from '../data/definition.player.js';
 import { serviceUpdateGameStateAndDump, serviceUpdateRoomState } from '../data/service.game.js';
 
 /**
@@ -65,8 +64,8 @@ export function gameManager(): MiddlewareHandler {
     c.temporaryZones = temporaryZones;
 
     // Clean existing State at each connection
-    await serviceUpdateRoomState(c);
     await serviceUpdateGameStateAndDump(c);
+    await serviceUpdateRoomState(c);
 
     await next();
   };
