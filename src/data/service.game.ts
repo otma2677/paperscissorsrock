@@ -2,9 +2,60 @@
  *
  */
 import { type Context } from 'hono';
+import { GameMiddleware } from '../middlewares/game-manager.js';
 
 /**
- *
+ * CREATE NEW ROOM OR FIND OPENED ROOM
+ */
+export async function serviceCreateARoom(c: Context) {
+  const user = c.user;
+  if (!user) return;
+
+  const roomID = c.userCurrentRoomID;
+  if (roomID) return;
+
+  const newID = crypto.randomUUID();
+  const room = {
+    createdAt: new Date(),
+    player1: user.public_id
+  }
+
+  c.rooms.set(newID, room);
+
+  return newID;
+}
+
+export async function serviceFindRoom(c: Context) {
+  const user = c.user;
+  if (!user) return;
+
+  const roomID = c.userCurrentRoomID;
+  if (roomID) return;
+
+  let game: GameMiddleware | undefined;
+
+  c.rooms.forEach((v, k, m) => {
+    if (!v.player2 && v.player1) {
+      game = {
+        created_at: new Date(),
+        public_id: crypto.randomUUID(),
+        player1: v.player1,
+        player2: user.public_id,
+        rounds: [],
+      };
+    }
+  });
+
+  if (!game) return;
+
+  const uuid = crypto.randomUUID();
+  c.games.set(uuid, game);
+
+  return uuid;
+}
+
+/**
+ * UPDATE & DUMPS
  */
 export async function serviceUpdateRoomState(c: Context) {
   const user = c.user;

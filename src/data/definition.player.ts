@@ -8,6 +8,7 @@ import { schemaBaseDB } from './definition.base-types.js';
  *
  */
 export const schemaPlayer = Type.Object({
+  public_id: Type.String(),
   name: Type.String(),
   pass: Type.String(),
   salt: Type.String()
@@ -17,9 +18,6 @@ export type Player = Static<typeof schemaPlayer>;
 
 export const schemaPlayerDB = Type.Composite([
   schemaBaseDB,
-  Type.Object({
-    public_id: Type.String(),
-  }),
   schemaPlayer
 ]);
 

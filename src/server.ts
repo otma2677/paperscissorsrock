@@ -41,8 +41,8 @@ async function server(options: Options) {
     }))
     .use(viewRenderer())
     .use(mysql(options.mysqlOptions))
-    .use(gameManager())
-    .use(sessionManager());
+    .use(sessionManager())
+    .use(gameManager());
 
   // Routers
   hono

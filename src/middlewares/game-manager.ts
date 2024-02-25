@@ -2,7 +2,7 @@
  *
  */
 import { type MiddlewareHandler } from 'hono';
-import { type Game } from '../data/definition.game.js';
+import { type Game, schemaGame } from '../data/definition.game.js';
 import { type Static, Type } from '@sinclair/typebox';
 import { type Player, schemaPlayer } from '../data/definition.player.js';
 import { serviceUpdateGameStateAndDump, serviceUpdateRoomState } from '../data/service.game.js';
@@ -12,8 +12,8 @@ import { serviceUpdateGameStateAndDump, serviceUpdateRoomState } from '../data/s
  */
 export const schemaRoom = Type.Object({
   createdAt: Type.Date(),
-  player1: schemaPlayer,
-  player2: Type.Optional(schemaPlayer),
+  player1: Type.String(),
+  player2: Type.Optional(Type.String()),
 });
 
 export type Room = Static<typeof schemaRoom>;
@@ -40,12 +40,20 @@ export const schemaTemporaryZone = Type.Object({
 
 export type TemporaryZone = Static<typeof schemaTemporaryZone>;
 
+export const schemaGameMiddleware = Type.Composite([
+  Type.Object({
+    created_at: Type.Date(),
+  }),
+  schemaGame,
+]);
+
+export type GameMiddleware = Static<typeof schemaGameMiddleware>;
 
 /**
  *
  */
 export function gameManager(): MiddlewareHandler {
-  const games = new Map<string, Game>();
+  const games = new Map<string, GameMiddleware>();
   const rooms = new Map<string, Room>();
   const moves = new Map<string, Move>();
   const temporaryZones = new Array<TemporaryZone>();
@@ -71,7 +79,7 @@ declare module 'hono' {
   interface Context {
     userCurrentGameID?: string;
     userCurrentRoomID?: string;
-    games: Map<string, Game>;
+    games: Map<string, GameMiddleware>;
     rooms: Map<string, Room>;
     moves: Map<string, Move>;
     temporaryZones: Array<TemporaryZone>;
