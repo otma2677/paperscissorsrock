@@ -1,6 +1,12 @@
 <nav>
   <ul>
-    <li><strong>PaperScissorsRock</strong></li>
+    <li>
+      <strong>
+        <a href="/">
+          PaperScissorsRock
+        </a>
+      </strong>
+    </li>
   </ul>
   <ul>
     <li><a href="/">Home</a></li>
