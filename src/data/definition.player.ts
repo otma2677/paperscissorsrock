@@ -16,12 +16,12 @@ export const schemaPlayer = Type.Object({
 
 export type Player = Static<typeof schemaPlayer>;
 
-export const schemaPlayerDB = Type.Composite([
+export const schemaUserDB = Type.Composite([
   schemaBaseDB,
   schemaPlayer
 ]);
 
-export type PlayerDB = Static<typeof schemaPlayerDB>;
+export type UserDB = Static<typeof schemaUserDB>;
 
 export const tableUserDB = `
   create table if not exists users

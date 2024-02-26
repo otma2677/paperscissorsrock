@@ -1,58 +1,95 @@
 /**
- *
+ * Node Imports
+ */
+
+/**
+ * External Imports
  */
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { cors } from 'hono/cors';
+
 import { secureHeaders } from 'hono/secure-headers';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { type ConnectionOptions } from 'mysql2/promise';
 
-// Internals
-import { routerDefault } from './routers/default.js';
-import { routerGame } from './routers/game.js';
-import { routerPlayer } from './routers/player.js';
-import { viewRenderer } from './middlewares/view-renderer.js';
-import { gameManager } from './middlewares/game-manager.js';
-import { sessionManager } from './middlewares/session-manager.js';
-import { mysql } from './middlewares/mysql.js';
-import { errorHandler } from './handlers/errors.js';
-import { notFoundHandler } from './handlers/not-found.js';
+import { Type, type Static } from '@sinclair/typebox';
+import { Value } from '@sinclair/typebox/value';
+
+/**
+ * Internal Imports
+ */
+import { routerDefault } from './routers/router.default.js';
+import { routerPlayer } from './routers/router.player.js';
+import { routerGame } from './routers/router.game.js';
+
+import { middlewareViewRenderer } from './middlewares/middleware.view-renderer.js';
+import { middlewareSession } from './middlewares/middleware.session.js';
+import { middlewareMysql } from './middlewares/middleware.mysql.js';
+import { middlewareGame } from './middlewares/middleware.game.js';
+
+import { handlerErrors } from './handlers/handler.errors.js';
+import { handlerNotFound } from './handlers/handler.not-found.js';
 
 /**
  *
  */
-export interface Options {
-  port: number;
-  host: string;
-  mysqlOptions: ConnectionOptions;
-}
+export const schemaOptions = Type.Object({
+  port: Type.Number(),
+  host: Type.String(),
+  mysqlOptions: Type.Union([
+    Type.Object({
+      port: Type.Number(),
+      host: Type.String(),
+      user: Type.String(),
+      password: Type.String(),
+      database: Type.String(),
+      ssl: Type.Optional(Type.String()),
+    }),
+    Type.String(),
+  ])
+});
 
-async function server(options: Options) {
+export type Options = Static<typeof schemaOptions>;
+
+async function server(options?: Options) {
+  const isValid = Value.Check(schemaOptions, options);
+  if (!isValid) {
+    Array
+      .from(Value.Errors(schemaOptions, options))
+      .forEach(err => {
+        console.error(err);
+      });
+
+    process.exit(1);
+  }
+
+  /**
+   *
+   */
   const hono = new Hono();
 
   // Middlewares
   hono
-    .use(logger())
+    // .use(logger())
     .use(cors())
     .use(secureHeaders())
     .use('/statics/*', serveStatic({
       root: './public/statics/',
       rewriteRequestPath: (path) => path.replace(/^\/statics/, '/'),
     }))
-    .use(viewRenderer())
-    .use(mysql(options.mysqlOptions))
-    .use(sessionManager())
-    .use(gameManager());
+    .use(middlewareViewRenderer())
+    .use(middlewareMysql(options.mysqlOptions))
+    .use(middlewareSession())
+    .use(middlewareGame());
 
   // Routers
   hono
-    .notFound(notFoundHandler)
-    .onError(errorHandler)
+    .notFound(handlerNotFound)
+    .onError(handlerErrors)
     .route('/', routerDefault)
-    .route('/games', routerGame)
-    .route('/players', routerPlayer);
+    .route('/players', routerPlayer)
+    .route('/games', routerGame);
 
   // Listen
   const server = serve({
@@ -64,6 +101,9 @@ async function server(options: Options) {
   });
 }
 
+/**
+ * Start server
+ */
 await server({
   port: 3000,
   host: '127.0.0.1',

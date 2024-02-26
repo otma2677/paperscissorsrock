@@ -1,9 +1,13 @@
 /**
  *
  */
-import { type Connection, ResultSetHeader, type RowDataPacket } from 'mysql2/promise';
 import { Value } from '@sinclair/typebox/value';
-import { schemaUserDB, type UserDB } from './definition.database.js';
+import {
+  type Connection,
+  type ResultSetHeader,
+  type RowDataPacket
+} from 'mysql2/promise';
+import { schemaUserDB, type UserDB } from './definition.player.js';
 
 /**
  *
@@ -25,6 +29,19 @@ export async function insertUser(obj: Omit<UserDB, 'id' | 'created_at' | 'public
 export async function getUserByName(obj: Pick<UserDB, 'name'>, connection: Connection) {
   const rows = await connection
     .query('SELECT * FROM users WHERE name = ?', [ obj.name ]) as Array<RowDataPacket>;
+
+  if (!rows[0])
+    return null;
+
+  if (!Value.Check(schemaUserDB, rows[0][0]))
+    return null;
+
+  return rows[0][0] as UserDB;
+}
+
+export async function getUserByPublicId(obj: Pick<UserDB, 'public_id'>, connection: Connection) {
+  const rows = await connection
+    .query('SELECT * FROM users WHERE public_id = ?', [ obj.public_id ]) as Array<RowDataPacket>;
 
   if (!rows[0])
     return null;

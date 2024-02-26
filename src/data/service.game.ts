@@ -2,85 +2,78 @@
  *
  */
 import { type Context } from 'hono';
-import { GameMiddleware, Room } from '../middlewares/game-manager.js';
+import { type ResultSetHeader } from 'mysql2/promise';
 
 /**
- * CREATE A GAME
+ * Clean functions
  */
-export async function serviceCreateGame(c: Context, room: Room) {
-  const user = c.user;
-  if (!user) return;
+export function cleanGames(c: Context) {
+  c
+    .games
+    .forEach(async (v, k, m) => {
+      if ((Date.now() - v.timestamp.getTime()) >= (1000 * 60) * 1) {
+        const insertedGame = await c
+          .mysql
+          .query(
+            `INSERT INTO games(created_at, public_id, player1, player2, rounds, winner, aborted, ended_at, ended, details) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              v.timestamp,
+              v.public_id,
+              v.player1,
+              v.player2,
+              JSON.stringify(v.rounds ?? []),
+              v.winner,
+              v.aborted ?? true,
+              v.ended_at ?? new Date(),
+              v.ended ?? true,
+              v.details ? JSON.stringify(v.details) : null
+            ]
+          ) as Array<ResultSetHeader>;
 
-  if (!room.player2) return;
+        if (insertedGame[0])
+          if (insertedGame[0].affectedRows >= 1)
+            m.delete(k);
+      }
+    });
+}
 
-
+export function cleanRooms(c: Context) {
+  c
+    .rooms
+    .forEach((v, i, a) => {
+      if ((Date.now() - v.sinceWhen.getTime()) >= 1000 * 60)
+        delete a[i];
+    });
 }
 
 /**
- * CREATE NEW ROOM OR FIND OPENED ROOM
+ * QUEUES related actions
  */
-export async function serviceCreateARoom(c: Context) {
-  const user = c.user;
-  if (!user) return;
+export function enqueueRoom(c: Context, playerID: string) {
+  const uuid = crypto.randomUUID();
 
-  const roomID = c.userCurrentRoomID;
-  if (roomID) return;
-
-  const newID = crypto.randomUUID();
-  const room = {
-    createdAt: new Date(),
-    player1: user.public_id
-  };
-
-  c.rooms.set(newID, room);
-
-  return { id: newID, room };
+  return c.rooms
+    .push({
+      uuid,
+      sinceWhen: new Date(),
+      playerID
+    }) -1;
 }
 
-/**
- * UPDATE & DUMPS
- */
-export async function serviceUpdateRoomState(c: Context) {
-  const roomID = c.userCurrentRoomID;
-  if (!roomID) return;
-
-  const room = c.rooms.get(roomID);
-  if (room) {
-    if ((Date.now() - room.createdAt.getTime()) >= 1000 * 60) {
-      c.userCurrentRoomID = undefined;
-      c.rooms.delete(roomID);
-    }
-  }
-
+export function peekRoom(c: Context) {
+  return c.rooms[0];
 }
 
-export async function serviceUpdateGameStateAndDump(c: Context) {
-  const gameID = c.userCurrentGameID;
-  if (!gameID) return;
-
-  const game = c.games.get(gameID);
-  if (game) {
-    if ((Date.now() - game.created_at.getTime()) >= (1000 * 60) * 5) {
-      c.userCurrentGameID = undefined;
-      c.games.delete(gameID);
-
-      await c
-        .mysql
-        .query(
-          `INSERT INTO games(public_id, created_at, player1, player2, rounds, winner, aborted, ended_at, ended, details) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`.trim(),
-          [
-            game.public_id,
-            game.created_at,
-            game.player1,
-            game.player2,
-            JSON.stringify(game.rounds),
-            game.winner ?? 0,
-            game.aborted ?? true,
-            game.ended_at ?? new Date(),
-            game.ended ?? true,
-            game.details ? JSON.stringify(game.details) : "[]"
-          ]
-        );
-    }
-  } else c.userCurrentGameID = undefined;
+export function dequeueRoom(c: Context) {
+  return c.rooms.shift();
 }
+
+export function isRoomEmpty(c: Context) {
+  return c.rooms.length === 0;
+}
+
+export function roomSize(c: Context) {
+  return c.rooms.length;
+}
+
+

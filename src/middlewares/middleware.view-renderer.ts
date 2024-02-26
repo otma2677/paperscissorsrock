@@ -8,7 +8,7 @@ import { Eta } from 'eta';
 /**
  *
  */
-export function viewRenderer(): MiddlewareHandler {
+export function middlewareViewRenderer(): MiddlewareHandler {
   const eta = new Eta({
     views: join(process.cwd(), 'public', 'views')
   });

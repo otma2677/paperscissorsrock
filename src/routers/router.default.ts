@@ -7,9 +7,7 @@ import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { tbValidator } from '@hono/typebox-validator';
-import { RowDataPacket } from 'mysql2/promise';
 import { Type } from '@sinclair/typebox';
-import { Value } from '@sinclair/typebox/value';
 
 import { generatePassword } from '../core/crypt.js';
 import { countPlayers, countPlayersActive, getUserByName, insertUser } from '../data/service.player.js';
@@ -40,33 +38,33 @@ routerDefault
   .get('/', async c => c.html(await c.views.renderAsync('pages/index', {})))
   .get('/contact', async c => c.html(await c.views.renderAsync('pages/contact', {})))
   .get('/privacy', async c => c.html(await c.views.renderAsync('pages/privacy', {})))
-  .get('/game/:page', tbValidator('param', schemaParamPageStringToNumber), async c => {
-    const param = Value.Decode(schemaParamPageStringToNumber, c.req.valid('param'));
-    const size = 50;
-    const offset = param.page * size;
-
-    const countSelectQuery = await c.mysql.query('SELECT count(*) FROM games') as Array<RowDataPacket>;
-    const count = countSelectQuery[0]?.[0]?.['count(*)'] as number | undefined;
-
-    if (!Number.isInteger(count))
-      throw new HTTPException(500, { message: 'Internal Server Error' });
-
-
-    const rows = await c
-      .mysql
-      .query(
-        'SELECT * FROM games ORDER BY created_at DESC LIMIT ? OFFSET ?',
-        [
-          size,
-          offset
-        ]
-      ) as Array<RowDataPacket>;
-
-    const sid = getCookie(c, 'sid') ?? '';
-    const auth = c.session.has(sid);
-
-    return c.html(c.views.renderAsync('pages/games', { games: rows[0], auth }));
-  })
+  // .get('/game/:page', tbValidator('param', schemaParamPageStringToNumber), async c => {
+  //   const param = Value.Decode(schemaParamPageStringToNumber, c.req.valid('param'));
+  //   const size = 50;
+  //   const offset = param.page * size;
+  //
+  //   const countSelectQuery = await c.mysql.query('SELECT count(*) FROM games') as Array<RowDataPacket>;
+  //   const count = countSelectQuery[0]?.[0]?.['count(*)'] as number | undefined;
+  //
+  //   if (!Number.isInteger(count))
+  //     throw new HTTPException(500, { message: 'Internal Server Error' });
+  //
+  //
+  //   const rows = await c
+  //     .mysql
+  //     .query(
+  //       'SELECT * FROM games ORDER BY created_at DESC LIMIT ? OFFSET ?',
+  //       [
+  //         size,
+  //         offset
+  //       ]
+  //     ) as Array<RowDataPacket>;
+  //
+  //   const sid = getCookie(c, 'sid') ?? '';
+  //   const auth = c.session.has(sid);
+  //
+  //   return c.html(c.views.renderAsync('pages/games', { games: rows[0], auth }));
+  // })
   .get('/stats', async c => {
     const countTotalPlayers = await countPlayers(c.mysql);
     const countActivePlayers = await countPlayersActive(c.mysql);

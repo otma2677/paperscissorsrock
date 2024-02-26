@@ -1,7 +1,7 @@
 /**
  *
  */
-import { type Static, Type } from '@sinclair/typebox';
+import { Type, type Static } from '@sinclair/typebox';
 import { schemaBaseDB } from './definition.base-types.js';
 
 /**
@@ -53,7 +53,7 @@ export const tableGameDB = `
       public_id  varchar(36) unique                      not null,
       player1    varchar(36)                             not null,
       player2    varchar(36)                             not null,
-      rounds     json default (json_array())             not null,
+      rounds     json                                    not null,
       winner     tinyint unsigned,
       aborted    boolean,
       ended_at   datetime,

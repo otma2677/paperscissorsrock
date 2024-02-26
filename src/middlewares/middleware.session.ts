@@ -2,14 +2,14 @@
  *
  */
 import { type MiddlewareHandler } from 'hono';
-import { UserDB } from '../data/definition.database.js';
+import { type UserDB } from '../data/definition.player.js';
 
 /**
  *
  */
 const session = new Map<string, Pick<UserDB, 'id' | 'created_at' | 'public_id' | 'name'>>();
 
-export function sessionManager(): MiddlewareHandler {
+export function middlewareSession(): MiddlewareHandler {
   return async function (c, next) {
     c.session = session;
 

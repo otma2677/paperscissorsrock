@@ -2,7 +2,7 @@
  *
  */
 import { Hono } from 'hono';
-import { authManager } from '../middlewares/auth-manager.js';
+import { middlewareAuth } from '../middlewares/middleware.auth.js';
 
 /**
  *
@@ -10,5 +10,5 @@ import { authManager } from '../middlewares/auth-manager.js';
 export const routerPlayer = new Hono();
 
 routerPlayer
-  .use(authManager())
+  .use(middlewareAuth())
   .get('/profile', async c => c.html(await c.views.renderAsync('pages/players/profile', { user: c.user })));
