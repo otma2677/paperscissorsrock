@@ -3,11 +3,114 @@
 <article>
   <header>
     <h1>Waiting room</h1>
-    ID: <strong><%= it.room.uuid %></strong>
+    ID: <strong><%= it.room.uuid %></strong> <br>
+    <span style="color: darkgreen;" id="found"></span>
+    <span style="color: darkblue;" id="wait"></span>
+    <span style="color: darkred;" id="not-found"></span>
   </header>
   <div>
-    <% if (it?.room) { %>
-      <%= it.room.playerID %>
-    <% } %>
+    <span id="refresh"></span>
   </div>
 </article>
+
+<script type="module">
+  // documentElements
+  const timer = document.getElementById('timer');
+  const spanFound = document.getElementById('found');
+  const spanWait = document.getElementById('wait');
+  const spanRefresh = document.getElementById('refresh');
+  const spanNotFound = document.getElementById('not-found');
+
+  // Source
+  const urlTarget = new URL('<%= it.pathURI %>', location);
+  const eventSource = new EventSource(urlTarget);
+  let count = 0;
+
+  //
+  await sleep(2000);
+
+  eventSource.onopen = event => {
+    cleanElements();
+
+    spanWait.innerText = '... Opening connection';
+  };
+
+  eventSource.onerror = event => {
+    cleanElements();
+
+    eventSource.close();
+  }
+
+  eventSource.addEventListener('wait', async event => {
+    cleanElements();
+    count += 1;
+
+    spanWait.innerText = `... Searching for opponent (${ count })`;
+  });
+
+  eventSource.addEventListener('not-found', async event => {
+    cleanElements();
+
+    spanNotFound.innerHTML = `
+      <p>
+        Not opponent found
+      </p>
+    `;
+
+    spanRefresh.innerHTML = `
+      <button onclick="window.location.reload()">
+        Refresh the page to wait again
+      </button>
+    `;
+
+    eventSource.close();
+  });
+
+  eventSource.addEventListener('found', async event => {
+    cleanElements();
+
+    spanFound.innerHTML = `
+      <p>
+        Game found! <br>
+        <a href="/games/gaming">Go to the game</a>
+      </p>
+    `;
+
+    eventSource.close();
+  });
+
+  function cleanElements() {
+    spanFound.innerHTML = '';
+    spanWait.innerHTML = '';
+    spanRefresh.innerHTML = '';
+    spanNotFound.innerHTML = '';
+  }
+  // /**
+  //  * Helpers
+  //  */
+  async function sleep(time) {
+    return new Promise(resolve => {
+      setTimeout(() => resolve(), time);
+    });
+  }
+  //
+  // function formatTime() {
+  //   count += 1;
+  //   const timeCalculated = maxTime - count;
+  //
+  //   let minutes = Math.floor(timeCalculated / 60);
+  //   let leftSecond = timeCalculated - (minutes * 60);
+  //
+  //   if (leftSecond.toString().length === 1)
+  //     leftSecond = `0${leftSecond}`;
+  //
+  //   if (minutes.toString().length === 1)
+  //     minutes = `0${minutes}`;
+  //
+  //   timer.innerText = `${ minutes }:${ leftSecond }`;
+  // }
+  //
+  // function refreshPage() {
+  //   location.reload();
+  // }
+</script>

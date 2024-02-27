@@ -68,6 +68,8 @@ routerGame
   })
   .get('/waiting', async c => {
     const user = c.user as UserDB;
+    const pathURI = '/sse/wait';
+    const maxTime = 60 * 1;
 
     if (c.userCurrentGameID)
       return c.redirect('/games/gaming');
@@ -77,7 +79,7 @@ routerGame
       const room = c.rooms[c.userIsInQueue];
       if (room) {
         return c.html(
-          c.views.renderAsync('pages/games/waiting-room', { room })
+          c.views.renderAsync('pages/games/waiting-room', { room, pathURI, maxTime })
         );
       }
     }
@@ -116,7 +118,7 @@ routerGame
 
       if (room) {
         return c.html(
-          c.views.renderAsync('pages/games/waiting-room', { room })
+          c.views.renderAsync('pages/games/waiting-room', { room, pathURI, maxTime })
         );
       }
     }
@@ -126,6 +128,9 @@ routerGame
 
 routerGame
   .basePath('/json_api')
+  .get('/wait', async c => {
+
+  })
   .post('/game/:id/:move', tbValidator('param', schemaPostGameIdMove), async c => {
     const param = c.req.valid('param');
     const user = c.user as UserDB;
