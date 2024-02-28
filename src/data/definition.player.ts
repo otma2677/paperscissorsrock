@@ -28,7 +28,7 @@ export const tableUserDB = `
   (
       id         int unsigned primary key auto_increment not null,
       created_at datetime    default current_timestamp   not null,
-      public_id  varchar(36) default (uuid())            not null,
+      public_id  varchar(36) unique default (uuid())     not null,
       name       varchar(64) unique                      not null,
       pass       varchar(128)                            not null,
       salt       varchar(128)                            not null

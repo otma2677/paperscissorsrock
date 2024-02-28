@@ -1,0 +1,40 @@
+<% if (it.auth) { %>
+<% layout('../layouts/auth-layout.eta', { title: 'Statistics' }) %>
+<% } else { %>
+<% layout('../layouts/main-layout.eta', { title: 'Statistics' }) %>
+<% } %>
+
+<article>
+  <header>
+    <h1>
+      Past games
+    </h1>
+    <p>Total games played is <%= it.count %></p>
+  </header>
+
+  <% if (it.pages >= 2) { %>
+    <% if (it.page > 1 && it.page !== it.pages) { %>
+      <a href="/past-games/<%= it.page + 1 %>">>></a>
+    <% } %>
+
+    <% if (it.page < it.pages && it.page !== 1) { %>
+      <a href="/past-games/<%= it.page - 1 %>"><<</a>
+    <% } %>
+  <% } %>
+  <table>
+    <thead>
+    <tr>
+      <th scope="col">ID.</th>
+      <th scope="col">From</th>
+      <th scope="col">Player</th>
+      <th scope="col">Player</th>
+      <th scope="col">Winner</th>
+    </tr>
+    </thead>
+    <tbody>
+    <% for (const game of it.games) { %>
+      <%~ include('../components/past-games.tr-game.eta', { game }) %>
+    <% } %>
+    </tbody>
+  </table>
+</article>

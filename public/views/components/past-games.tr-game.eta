@@ -1,0 +1,16 @@
+<% if (it.game) { %>
+  <% const players = [ it.game.player1, it.game.player2 ].sort(); %>
+  <tr>
+    <th scope="row"><%= it.game.public_id %></th>
+    <th><%= it.game.created_at.toLocaleDateString() %></th>
+    <td><%= players[0] %></td>
+    <td><%= players[1] %></td>
+    <% if (it.game.winner === null) { %>
+      <td>Aborted</td>
+    <% } else if (it.game.winner === 0) { %>
+      <td>Draw</td>
+    <% } else { %>
+      <td><%= it.game.winner === 1 ? it.game.player1 : it.game.player2 %></td>
+    <% } %>
+  </tr>
+<% } %>
