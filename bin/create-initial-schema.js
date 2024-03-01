@@ -27,8 +27,8 @@ while (true) {
   }
 }
 
-const availableSchemas = (await connection.query('SHOW SCHEMAS'))[0];
-const existingSchema = availableSchemas.find(schema => schema['Database'] === schemaName);
+const availableSchemas = (await connection.query('select SCHEMA_NAME as name from information_schema.SCHEMATA;\n'))[0];
+const existingSchema = availableSchemas.find(schema => schema['name'] === schemaName);
 if (existingSchema) {
   console.log(`Schema name "${schemaName}" is already in use within your MySQL instance.`);
   await rl.close();
