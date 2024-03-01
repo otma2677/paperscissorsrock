@@ -35,13 +35,14 @@ try {
 const migrationTable = `
   CREATE TABLE IF NOT EXISTS migrations
   (
-    id int unsigned primary key auto_increment not null,
-    inserted_at datetime default current_timestamp not null,
-    name varchar(256) not null,
-    path varchar(1024) not null,
-    content mediumtext not null,
-    failed boolean default false not null,
-    error json
+      id            int unsigned primary key auto_increment not null,
+      creation_date datetime                                not null,
+      inserted_at   datetime default current_timestamp      not null,
+      name          varchar(256)                            not null,
+      path          varchar(1024)                           not null,
+      content       mediumtext                              not null,
+      failed        boolean  default false                  not null,
+      error         json
   );
 `.trim().replaceAll('\r', '').replaceAll('\n', '');
 

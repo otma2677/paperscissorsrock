@@ -4,6 +4,7 @@
 import { join } from 'node:path';
 import { writeFileSync, accessSync } from 'node:fs';
 import { createInterface } from 'node:readline/promises';
+import { randomBytes } from 'node:crypto';
 
 /**
  *
@@ -17,67 +18,48 @@ const rl = createInterface({
   output: process.stdout
 });
 
-let isFullDate = '';
-while(true) {
-  const temp = await rl.question('Use default date format (year-month-day is default, or time) ? (Y/n)');
-  if (temp === '' || temp.toLowerCase() === 'y')
-    isFullDate = 'y';
+let isThereAName = await rl.question('Add a name to add to the file name of the migration ? (leave blank if none)');
+let isThereAComment = await rl.question('Add a comment/note to add in the migration file ? (leave blank if none)');
 
-  if (temp.toLowerCase() === 'n')
-    isFullDate = 'n';
-
-  if (isFullDate === 'y' || isFullDate === 'n')
-    break;
-}
-
-let isThereAName = await rl.question('Add a name to the migration ? (leave blank if none)');
-let isThereAComment = await rl.question('Add a comment to the migration ? (leave blank if none)');
-
-let fileName = '';
-if (isFullDate === 'y')
-  fileName += new Date().toLocaleDateString();
-else
-  fileName += Date.now();
+let fileName = new Date()
+  .toISOString().split('.')[0]
+  .replaceAll(':', '_');
 
 if (isThereAName.length >= 1) {
   isThereAName = isThereAName
     .replaceAll(' ', '-')
-    .replaceAll('.', '_');
+    .replaceAll('.', '-');
 
   fileName += ('.' + isThereAName);
-} else {
-  fileName += ('.' + '0001');
 }
 
-if (isThereAComment) {
+if (isThereAComment.length >= 1) {
   isThereAComment = isThereAComment
     .replaceAll('\n', '\n #');
 }
 
+fileName += '.' + randomBytes(3).toString('hex');
 fileName += '.sql';
 fileName = fileName
   .replaceAll('/', '-');
 
-let count = 1;
-while (true) {
-  const previous = '000' + String(count);
-  const pathToMaybeFile = join(process.cwd(), 'migrations', fileName);
-
-  console.log(pathToMaybeFile);
-
-  if (checkPath(pathToMaybeFile)) {
-    count += 1;
-    const current = '000' + String(count);
-    fileName = fileName.replace(previous, current);
-  }
-
-  if (!checkPath(pathToMaybeFile))
-    break;
+const finalPath = join(pathToMigrationsFolder, fileName);
+if (checkPath(finalPath)) {
+  console.error('File already exists.');
+  await rl.close();
+  process.exit(1);
 }
 
-const finalPath = join(process.cwd(), 'migrations', fileName);
-const defaultContent = `# Generated at ${ new Date().toLocaleTimeString() }.\n#${ isThereAComment }`;
-writeFileSync(finalPath, defaultContent, { encoding: 'utf-8' });
+let defaultContent =
+  `# Generated at through the script ${ import.meta.filename } at ${ new Date().toLocaleTimeString() }.\n`;
+
+if (isThereAComment.length >= 0) {
+  defaultContent += `#${ isThereAComment }`;
+}
+
+writeFileSync(finalPath, defaultContent, { flag: 'ax' });
+
+console.log(`File created at ${ finalPath }`);
 
 await rl.close();
 
