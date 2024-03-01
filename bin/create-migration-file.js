@@ -22,8 +22,9 @@ let isThereAName = await rl.question('Add a name to add to the file name of the 
 let isThereAComment = await rl.question('Add a comment/note to add in the migration file ? (leave blank if none)');
 
 let fileName = new Date()
-  .toISOString().split('.')[0]
-  .replaceAll(':', '_');
+  .toISOString()
+  .replaceAll(':', '_')
+  .replace('.', '--');
 
 if (isThereAName.length >= 1) {
   isThereAName = isThereAName
@@ -51,7 +52,7 @@ if (checkPath(finalPath)) {
 }
 
 let defaultContent =
-  `# Generated at through the script ${ import.meta.filename } at ${ new Date().toLocaleTimeString() }.\n`;
+  `#Generated at through the script ${ import.meta.filename } at ${ new Date().toISOString() }.\n`;
 
 if (isThereAComment.length >= 0) {
   defaultContent += `#${ isThereAComment }`;
