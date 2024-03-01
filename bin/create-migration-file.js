@@ -80,6 +80,7 @@ const defaultContent = `# Generated at ${ new Date().toLocaleTimeString() }.\n#$
 writeFileSync(finalPath, defaultContent, { encoding: 'utf-8' });
 
 await rl.close();
+
 /**
  * HELPERS
  */

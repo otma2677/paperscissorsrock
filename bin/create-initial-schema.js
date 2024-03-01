@@ -38,9 +38,8 @@ if (existingSchema) {
 
 try {
   await connection.query('CREATE SCHEMA IF NOT EXISTS ?', [schemaName]);
-
 } catch (err) {
-  console.error(`An error occurred while creating schema ${schemaName}\n\n\n${err}`);
+  console.error(`An error occurred while creating schema "${schemaName}".\n\n\n${err}`);
 }
 
 await rl.close();
