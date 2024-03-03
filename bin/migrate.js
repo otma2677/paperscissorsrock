@@ -60,8 +60,20 @@ async function commandUp(migrations) {
     }
 
     const lastMigration = migrations[count];
+    if (lastMigration?.name === migrationRows[count]?.name) {
+      console.error(`Migration of ${ lastMigration.name } has already been done.`);
+      process.exit(1);
+    }
     try {
-      await connection.query(lastMigration?.content);
+      const statements = lastMigration
+        ?.content
+        .split(';')
+        .filter(stmt => stmt.length >= 10)
+        // .map(stmt => stmt + ';')
+
+      for (const statement of statements)
+        await connection.query(statement);
+
       const result = (await connection.query(
         'INSERT INTO migrations(creation_date, name, path, content) VALUES(?, ?, ?, ?)',
         [
