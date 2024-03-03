@@ -44,23 +44,3 @@ export type GameDB = Static<typeof schemaGameDB>;
 export const schemaRound = Type.Pick(schemaGameDB, [ 'rounds' ]);
 
 export type Round = Static<typeof schemaRound>;
-
-export const tableGameDB = `
-  create table if not exists games
-  (
-      id         int unsigned primary key auto_increment not null,
-      created_at datetime                                not null,
-      public_id  varchar(36) unique                      not null,
-      player1    varchar(36)                             not null,
-      player2    varchar(36)                             not null,
-      rounds     json                                    not null,
-      winner     tinyint unsigned,
-      aborted    boolean,
-      ended_at   datetime,
-      ended      boolean,
-      details    json
-  );
-`
-  .trim()
-  .replaceAll('\r', '')
-  .replaceAll('\n', '');
