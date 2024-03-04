@@ -1,5 +1,5 @@
 #Generated at through the script C:\Users\mahmo\WebstormProjects\paperscissorsrock\bin\create-migration-file.js at 2024-03-03T16:21:14.781Z.
-#
+
 create table if not exists users
 (
     id         int unsigned primary key auto_increment      not null,

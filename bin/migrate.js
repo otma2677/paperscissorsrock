@@ -43,49 +43,67 @@ async function commandUp(migrations) {
       database: process.env.MYSQL_SCHEMA,
       ssl: process.env.MYSQL_SSL
     });
-    const migrationRows = (await connection.query('SELECT * FROM migrations WHERE failed is false ORDER BY creation_date ASC LIMIT 1'))[0];
-    let count = 0;
 
-    while (true) {
-      if (migrationRows.length === 0)
-        break;
-
-      if (migrationRows.length >= count)
-        break;
-
-      if (migrationRows[count]?.name !== migrations[count]?.name)
-        break;
-
-      count += 1;
-    }
-
-    const lastMigration = migrations[count];
-    if (lastMigration?.name === migrationRows[count]?.name) {
-      console.error(`Migration of ${ lastMigration.name } has already been done.`);
+    const migrationRows = (await connection.query('SELECT * FROM migrations WHERE failed is false ORDER BY creation_date DESC LIMIT 1'))[0];
+    const lastMigrationIndex = migrations.findIndex(migration => migration?.name === migrationRows[0]?.name);
+    if (!migrations[lastMigrationIndex +1]) {
+      console.error(`Migration of ${ migrationRows[0]?.name } has already been done at ${ migrationRows[0]?.inserted_at}.`);
       process.exit(1);
     }
+
+    const migrationToBeInserted = lastMigrationIndex === -1 ? migrations[0] : migrations[lastMigrationIndex +1];
+    const lastMigration = lastMigrationIndex === -1 ? migrations[0] : migrations[lastMigrationIndex +1];
+
+
+    /**
+     * Insert the last migration
+     */
     try {
       const statements = lastMigration
         ?.content
         .split(';')
         .filter(stmt => stmt.length >= 10)
-        // .map(stmt => stmt + ';')
 
-      for (const statement of statements)
-        await connection.query(statement);
+      try {
+        await connection.beginTransaction();
 
-      const result = (await connection.query(
-        'INSERT INTO migrations(creation_date, name, path, content) VALUES(?, ?, ?, ?)',
-        [
-          lastMigration.timestamp,
-          lastMigration.name,
-          lastMigration.path,
-          lastMigration.content
-        ]
-      ))[0];
+        for (const statement of statements)
+          await connection.query(statement);
 
-      if (result.affectedRows === 1)
-        console.log(`Migration ${ lastMigration.name } has been successfully applied.`);
+        await connection.commit();
+
+        const result = (await connection.query(
+          'INSERT INTO migrations(creation_date, name, path, content) VALUES(?, ?, ?, ?)',
+          [
+            lastMigration.timestamp,
+            lastMigration.name,
+            lastMigration.path,
+            lastMigration.content
+          ]
+        ))[0];
+
+        if (result.affectedRows === 1)
+          console.log(`Migration ${ lastMigration.name } has been successfully applied.`);
+
+      } catch (err) {
+        await connection.rollback();
+
+        await connection.query(
+          'INSERT INTO migrations(creation_date, name, path, content, failed, error) VALUES(?, ?, ?, ?, ?, ?)',
+          [
+            lastMigration.timestamp,
+            lastMigration.name,
+            lastMigration.path,
+            lastMigration.content,
+            true,
+            JSON.stringify(err)
+          ]
+        );
+
+        console.error(err);
+        console.error(`No changes to the database have been made.`);
+      }
+
     } catch (err) {
       await connection.query(
         'INSERT INTO migrations(creation_date, name, path, content, failed, error) VALUES(?, ?, ?, ?, ?, ?)',
