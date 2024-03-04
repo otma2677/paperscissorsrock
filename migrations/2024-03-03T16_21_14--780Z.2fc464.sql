@@ -28,5 +28,6 @@ create table if not exists games
 create table if not exists connections
 (
     id         int unsigned primary key auto_increment not null,
-    created_at datetime default current_timestamp      not null
+    created_at datetime default current_timestamp      not null,
+    user_id    int unsigned                            not null
 );
