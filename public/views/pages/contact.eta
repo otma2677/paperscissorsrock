@@ -3,7 +3,78 @@
 <article>
   <header>
     <h1>Contact</h1>
+
+    <% if (it?.message) { %>
+    <p style="color: darkgreen;">
+      <strong>
+        <%= it?.message ? it?.message : '' %>
+      </strong>
+    </p>
+    <% } %>
+
+    <% if (it?.error?.message) { %>
+    <p style="color: darkred;">
+      <strong>
+        <%= it?.error?.message ? it.error.message : '' %>
+      </strong>
+    </p>
+    <% } %>
   </header>
 
+  <form id="form" method="post" action="/contact">
+    <fieldset>
+      <label>
+        Title
+        <input
+          type="text"
+          name="title"
+          id="title"
+          placeholder="Title"
+          minlength="4"
+          maxlength="64"
+          required
+          value="<%= it?.form?.title ? it.form.title : '' %>"
+        />
 
+        <small style="color: darkred;"><%= it?.error?.title ? it.error.title : '' %></small>
+      </label>
+
+      <label>
+        Email
+        <input
+          type="email"
+          name="email"
+          id="email"
+          placeholder="Email"
+          maxlength="256"
+          required
+          value="<%= it?.form?.email ? it.form.email : '' %>"
+        />
+
+        <small style="color: darkred;"><%= it?.error?.email ? it.error.email : '' %></small>
+      </label>
+
+      <label>
+        Content
+
+        <textarea
+          name="content"
+          id="content"
+          minlength="32"
+          maxlength="4096"
+          rows="10"
+          placeholder="Write a message ..."
+          required
+        ><%= it?.form?.content ? it.form.content : '' %></textarea>
+
+        <small style="color: darkred;"><%= it?.error?.content ? it.error.content : '' %></small>
+      </label>
+
+    </fieldset>
+
+    <input
+      type="submit"
+      value="Subscribe"
+    />
+  </form>
 </article>

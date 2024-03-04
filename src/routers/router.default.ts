@@ -9,7 +9,7 @@ import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { tbValidator } from '@hono/typebox-validator';
 import { Type } from '@sinclair/typebox';
 import { Value } from '@sinclair/typebox/value';
-import { type RowDataPacket } from 'mysql2/promise';
+import { type ResultSetHeader, type RowDataPacket } from 'mysql2/promise';
 
 import { generatePassword } from '../core/crypt.js';
 import { countPlayers, countPlayersActive, getUserByName, insertUser } from '../data/service.player.js';
@@ -36,14 +36,19 @@ const schemaParamPageStringToNumber = Type.Object({
     .Encode(v => String(v))
 });
 
+const schemaPostContact = Type.Object({
+  title: Type.String({ minLength: 4, maxLength: 64 }),
+  email: Type.RegExp(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g),
+  content: Type.String({ minLength: 32, maxLength: 4096 })
+});
+
 routerDefault
   .get('/', async c => c.html(await c.views.renderAsync('pages/index', {})))
-  .get('/contact', async c => c.html(await c.views.renderAsync('pages/contact', {})))
   .get('/privacy', async c => c.html(await c.views.renderAsync('pages/privacy', {})))
   .get('/past-games/:page', tbValidator('param', schemaParamPageStringToNumber), async c => {
     const param = Value.Decode(schemaParamPageStringToNumber, c.req.valid('param'));
     const size = 50;
-    const offset = size * (param.page -1);
+    const offset = size * (param.page - 1);
 
     const countSelectQuery = await c.mysql.query('SELECT count(*) FROM games') as Array<RowDataPacket>;
     const count = countSelectQuery[0]?.[0]?.['count(*)'] as number | undefined;
@@ -146,7 +151,7 @@ routerDefault
       name: user.name,
     });
     setCookie(c, 'sid', idSession, {
-      maxAge: Date.now() + (((24 * 60 * 60) *1000) *7),
+      maxAge: Date.now() + (((24 * 60 * 60) * 1000) * 7),
       secure: true,
       httpOnly: true,
     })
@@ -205,4 +210,80 @@ routerDefault
     return c.html(await c.views.renderAsync('pages/login', {
       message: 'You are registered, you can now log in'
     }));
+  })
+  .get('/contact', async c => c.html(await c.views.renderAsync('pages/contact', {})))
+  .post('/contact', tbValidator('form', schemaPostContact), async c => {
+    const data = c.req.valid('form');
+    let address = c.req.header('X-Forwarded-For');
+    if (!address)
+      address = c.req.header('X-Real-Ip');
+
+    const noSpamResult = (await c
+      .mysql
+      .query(
+        'SELECT count(*) FROM messages WHERE timediff(now(), created_at) <= 50 AND email = ? OR ip_address = ?',
+        [ data.email, address ]
+      )) as Array<RowDataPacket>;
+
+    if (noSpamResult[0] && noSpamResult[0][0]['count(*)'] >= 1) {
+      c.status(403);
+      return c.html(
+        c.views.renderAsync('pages/contact', {
+          error: {
+            message: 'You\'ve already sent a message recently, please wait for at least a minute.'
+          },
+          form: data
+        })
+      );
+    }
+
+
+    const noFloodResult = await c
+      .mysql
+      .query(
+        'SELECT count(*) FROM messages WHERE timediff(now(), created_at) <= (24 * 60 * 60) AND email = ? OR ip_address = ?',
+        [ data.email, address ]
+      ) as Array<RowDataPacket>;
+
+    if (noFloodResult[0] && noFloodResult[0][0]['count(*)'] > 5) {
+      c.status(403);
+      return c.html(
+        c.views.renderAsync('pages/contact', {
+          error: {
+            message: 'You\'ve already sent more than five messages, please wait for at least few hours.'
+          },
+          form: data
+        })
+      );
+    }
+
+    const insertResult = await c
+      .mysql
+      .query(
+        'INSERT INTO messages(title, email, content, ip_address) VALUES(?, ?, ?, ?)',
+        [
+          data.title,
+          data.email,
+          data.content,
+          address
+        ]
+      ) as Array<ResultSetHeader>;
+
+    if (insertResult[0] && insertResult[0].affectedRows <= 0) {
+      c.status(500);
+      return c.html(
+        c.views.renderAsync('pages/contact', {
+          error: {
+            message: 'Internal server error. Please, retry later.'
+          },
+          form: data
+        })
+      );
+    }
+
+    return c.html(
+      c.views.renderAsync('pages/contact', {
+        message: 'Successfully sent the message.'
+      })
+    );
   });
