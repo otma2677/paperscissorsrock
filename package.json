@@ -5,7 +5,12 @@
   "type": "module",
   "scripts": {
     "start": "tsx --env-file=.env src/server.ts",
-    "watch": "tsx watch --env-file=.env src/server.ts"
+    "watch": "tsx watch --env-file=.env src/server.ts",
+    "db:migrate": "node --env-file=.env ./bin/migrate.js",
+    "db:create-migration": "node bin/create-migration-file.js",
+    "db:initialisation": "npm run db:initial-schema && npm run db:initial-migration",
+    "db:initial-schema": "node --env-file=.env bin/create-initial-schema.js",
+    "db:initial-migration": "node --env-file=.env bin/create-initial-migration.js"
   },
   "devDependencies": {
     "@picocss/pico": "^2.0.3",

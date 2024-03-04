@@ -1,7 +1,6 @@
 {
   "include": [
     "src",
-    "src/server.ts",
     "global.d.ts"
   ],
   "compilerOptions": {
