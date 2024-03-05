@@ -11,7 +11,6 @@
   <ul>
     <li><a href="/players/profile">Profile</a></li>
     <li><a href="/stats">Stats</a></li>
-    <li><a href="/past-games/1">Games</a></li>
     <li><a href="/logout">Log out</a></li>
   </ul>
 </nav>
