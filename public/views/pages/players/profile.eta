@@ -1,4 +1,34 @@
 <% layout('../../layouts/auth-layout.eta', { title: 'Profile' }) %>
 
-<h1>Hello <%= it.user.name %></h1>
-<a href="/games/waiting">Play a game ?</a>
+<article>
+  <header>
+    <h1>Hi <%= it.user.name %></h1>
+    <p>ID: <%= it.user.public_id %></p>
+    <p>Games played: <%= it.gamesPlayed %></p>
+  </header>
+
+  <% if (it.recentGames && it.recentGames.length >= 1) { %>
+    <table>
+      <thead>
+      <tr>
+        <th scope="col">ID.</th>
+        <th scope="col">From</th>
+        <th scope="col">Player</th>
+        <th scope="col">Player</th>
+        <th scope="col">Winner</th>
+      </tr>
+      </thead>
+      <tbody>
+      <% for (const game of it.recentGames) { %>
+      <%~ include('../../components/past-games.tr-game.eta', { game }) %>
+      <% } %>
+      </tbody>
+    </table>
+  <% } else { %>
+    <p>No recent games played</p>
+  <% } %>
+
+  <footer>
+    <button type="button" onclick="window.location.href='/games/waiting'">Play a new game</button>
+  </footer>
+</article>
