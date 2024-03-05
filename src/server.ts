@@ -22,6 +22,7 @@ import { Value } from '@sinclair/typebox/value';
 import { routerDefault } from './routers/router.default.js';
 import { routerPlayer } from './routers/router.player.js';
 import { routerGame } from './routers/router.game.js';
+import { routerSSE } from './routers/router.sse.js';
 
 import { middlewareViewRenderer } from './middlewares/middleware.view-renderer.js';
 import { middlewareSession } from './middlewares/middleware.session.js';
@@ -71,7 +72,7 @@ async function server(options?: Options) {
 
   // Middlewares
   hono
-    // .use(logger())
+    .use(logger())
     .use(cors())
     .use(secureHeaders())
     .use('/statics/*', serveStatic({
@@ -89,7 +90,8 @@ async function server(options?: Options) {
     .onError(handlerErrors)
     .route('/', routerDefault)
     .route('/players', routerPlayer)
-    .route('/games', routerGame);
+    .route('/games', routerGame)
+    .route('/sse', routerSSE);
 
   // Listen
   const server = serve({

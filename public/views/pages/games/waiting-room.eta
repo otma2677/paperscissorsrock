@@ -52,14 +52,14 @@
     cleanElements();
 
     spanNotFound.innerHTML = `
-      <p>
-        Not opponent found
+      <p color="darkred">
+        Sorry, no opponent found !
       </p>
     `;
 
     spanRefresh.innerHTML = `
       <button onclick="window.location.reload()">
-        Refresh the page to wait again
+        Wait again ?
       </button>
     `;
 

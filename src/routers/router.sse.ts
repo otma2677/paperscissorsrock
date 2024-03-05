@@ -27,8 +27,9 @@ routerSSE
   })
   .get('/wait', async c => {
     return streamSSE(c, async stream => {
+      let count = 0;
       while (true) {
-        if (c.userCurrentGameID)
+        if (c.userCurrentGameID || count >= 60)
           break;
 
         await stream.writeSSE({
@@ -36,6 +37,7 @@ routerSSE
           event: 'wait'
         });
 
+        count += 1;
         await stream.sleep(1000);
       }
 
