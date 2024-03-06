@@ -12,6 +12,9 @@ export function cleanGames(c: Context) {
     .games
     .forEach(async (v, k, m) => {
       if ((Date.now() - v.timestamp.getTime()) >= (1000 * 60) * 1) {
+        c.playerInGames.delete(v.player1);
+        c.playerInGames.delete(v.player2);
+
         const insertedGame = await c
           .mysql
           .query(

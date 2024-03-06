@@ -7,6 +7,7 @@ import { HTTPException } from 'hono/http-exception';
 import { tbValidator } from '@hono/typebox-validator';
 import { Type } from '@sinclair/typebox';
 import { UserDB } from '../data/definition.player.js';
+import { getCookie } from 'hono/cookie';
 
 /**
  *
@@ -26,10 +27,22 @@ routerSSE
     await next();
   })
   .get('/wait', async c => {
+    const sid = getCookie(c, 'sid');
+    if (!sid)
+      return c.notFound();
+
+    const user = c.session.get(sid);
+    if (!user)
+      return c.notFound();
+
+
     return streamSSE(c, async stream => {
       let count = 0;
       while (true) {
-        if (c.userCurrentGameID || count >= 60)
+        if (c.playerInGames.get(user.public_id))
+          break;
+
+        if (count >= 60)
           break;
 
         await stream.writeSSE({
@@ -41,7 +54,9 @@ routerSSE
         await stream.sleep(1000);
       }
 
-      if (c.userCurrentGameID) {
+      const gameID = c.playerInGames.get(user.public_id);
+      if (gameID) {
+        c.userCurrentGameID = gameID;
         const game = c.games.get(c.userCurrentGameID);
         if (game) {
           await stream.writeSSE({

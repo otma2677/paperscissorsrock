@@ -105,6 +105,8 @@ routerGame
           c.userIsInQueue = undefined;
           c.userCurrentGameID = uuid;
           c.games.set(uuid, { ... game, timestamp: new Date() });
+          c.playerInGames.set(game.player1, game.public_id);
+          c.playerInGames.set(game.player2, game.public_id);
           return c.redirect('/games/gaming');
         }
       }
@@ -118,7 +120,7 @@ routerGame
 
       if (room) {
         return c.html(
-          c.views.renderAsync('pages/games/waiting-room', { room, pathURI, maxTime })
+          c.views.renderAsync('pages/games/waiting-room', { room, pathURI, maxTime, userID: c.user?.public_id })
         );
       }
     }
@@ -128,9 +130,6 @@ routerGame
 
 routerGame
   .basePath('/json_api')
-  .get('/wait', async c => {
-
-  })
   .post('/game/:id/:move', tbValidator('param', schemaPostGameIdMove), async c => {
     const param = c.req.valid('param');
     const user = c.user as UserDB;

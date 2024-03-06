@@ -4,7 +4,7 @@
 import { type MiddlewareHandler } from 'hono';
 import { Type, type Static } from '@sinclair/typebox';
 import { type Player } from '../data/definition.player.js';
-import { schemaGame as sg, type Round } from '../data/definition.game.js';
+import { schemaGame as sg, type Game } from '../data/definition.game.js';
 
 /**
  *
@@ -31,6 +31,7 @@ export type RoundMiddlewareDefinition = Static<typeof schemaRoundMiddlewareDefin
  *
  */
 const playingGames = new Map<string, GameMiddlewareDefinition>()
+const playingPlayers = new Map<Player['public_id'], Game['public_id']>();
 const waitingQueues: Array<{ uuid: string; sinceWhen: Date, playerID: Player['public_id'] }> = [];
 const temporaryRounds = new Map<string, RoundMiddlewareDefinition>;
 
@@ -39,6 +40,7 @@ export function middlewareGame(): MiddlewareHandler {
     c.games = playingGames;
     c.rooms = waitingQueues;
     c.rounds = temporaryRounds;
+    c.playerInGames = playingPlayers;
 
     await next();
   };
@@ -50,6 +52,7 @@ export function middlewareGame(): MiddlewareHandler {
 declare module 'hono' {
   interface Context {
     games: Map<string, GameMiddlewareDefinition>;
+    playerInGames: Map<Player['public_id'], Game['public_id']>;
     rooms: Array<{ uuid: string; sinceWhen: Date, playerID: Player['public_id'] }>;
     rounds: Map<string, RoundMiddlewareDefinition>;
   }
