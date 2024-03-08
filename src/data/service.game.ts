@@ -5,13 +5,13 @@ import { type Context } from 'hono';
 import { type ResultSetHeader } from 'mysql2/promise';
 
 /**
- * Clean functions
+ * Cleaning functions
  */
-export function cleanGames(c: Context) {
+export function clearGames(c: Context) {
   c
     .games
     .forEach(async (v, k, m) => {
-      if ((Date.now() - v.timestamp.getTime()) >= (1000 * 60) * 1) {
+      if ((Date.now() - v.timestamp.getTime()) >= ((60 * 5) *1000)) {
         c.playerInGames.delete(v.player1);
         c.playerInGames.delete(v.player2);
 
@@ -40,11 +40,11 @@ export function cleanGames(c: Context) {
     });
 }
 
-export function cleanRooms(c: Context) {
+export function clearRooms(c: Context) {
   c
     .rooms
     .forEach((v, i, a) => {
-      if ((Date.now() - v.sinceWhen.getTime()) >= 1000 * 60)
+      if ((Date.now() - v.sinceWhen.getTime()) >= ((60 * 1) *1000))
         delete a[i];
     });
 }
