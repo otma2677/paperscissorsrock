@@ -1,10 +1,96 @@
-<% layout('../../layouts/auth-layout.eta', { title: 'Waiting room' }) %>
+<% layout('../../layouts/auth-layout.eta', { title: 'Gaming room' }) %>
 
-<h1>Gaming room</h1>
-<div>
-  <% if (it?.game) { %>
-    <h1><%= it.game.public_id %></h1>
-    <p>Player1: <%= it.game.player1 %></p>
-    <p>Player2: <%= it.game.player2 %></p>
-  <% } %>
-</div>
+<article>
+  <header>
+    <h1>Gaming room</h1>
+    ID: <strong><%= it.game.public_id %></strong> <br>
+    You play against <strong><%= it.opponent.name %></strong>, as
+    <strong><%= it.player.name %></strong>
+
+    hr
+
+    <strong><span id="countdown"></span></strong> <br>
+    <span id="status" color="darkblue"></span>
+    <span id="error" color="darkred"></span>
+    <span id="ended" color="darkgreen"></span>
+  </header>
+
+  <div id="gameState">
+
+  </div>
+</article>
+
+<script>
+  // UI Elements
+  const countdownSpan = document.getElementById('countdown');
+  const statusSpan = document.getElementById('status');
+  const errorSpan = document.getElementById('error');
+  const endedSpan = document.getElementById('ended');
+  const gameState = document.getElementById('gameState');
+
+  // Server provided values
+  const id = '<%= it.game.public_id %>';
+  const sseURI = '<%= it.uri %>';
+  const source = new EventSource(sseURI + '/<%= it.game.public_id %>');
+
+  // Values
+  let interval;
+
+
+  source.onerror = event => {
+    clearInterval(interval);
+    cleanElements();
+    errorSpan.innerText = 'Cannot reach the server.';
+  };
+
+  source.addEventListener('ended', event => {
+    clearInterval(interval);
+    cleanElements();
+    statusSpan.innerText = 'Status: Ended';
+    endedSpan.innerText = 'Game has been ended';
+  });
+
+  source.addEventListener('broadcast', event => {
+    gameState.innerText = event.data;
+  });
+
+  // Countdown
+  interval = setInterval(() => {
+    const startTime = new Date('<%= it.game.timestamp %>');
+    const endTime = new Date(startTime.getTime() + ((60 * 5) * 1000));
+    const timeLeft = Math.floor((endTime.getTime() - Date.now()) /1000);
+    const formatted = formatDate(timeLeft);
+
+    countdownSpan.innerText = `Time: ${ formatted }`;
+
+    if (timeLeft <= 0) {
+      cleanElements();
+      countdownSpan.innerText = '0';
+      endedSpan.innerText = 'Game ended';
+      clearInterval(interval);
+    }
+  }, 1000);
+
+  /**
+   *
+   */
+  function cleanElements() {
+    countdownSpan.innerHTML = '';
+    statusSpan.innerHTML = '';
+    errorSpan.innerHTML = '';
+    endedSpan.innerHTML = '';
+  }
+
+  function formatDate(time) {
+    const minutes = Math.floor(time / 60);
+    const seconds = time - (minutes * 60);
+
+    let stringMinutes = minutes.toString();
+    stringMinutes = stringMinutes.length === 1 ? `0${ stringMinutes }` : stringMinutes;
+
+    let stringSeconds = seconds.toString();
+    stringSeconds = stringSeconds.length === 1 ? `0${ stringSeconds }` : stringSeconds;
+
+    return `${ stringMinutes }:${ stringSeconds }`;
+  }
+</script>

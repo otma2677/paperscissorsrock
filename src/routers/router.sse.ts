@@ -75,7 +75,14 @@ routerSSE
     });
   })
   .get('/game/:id', tbValidator('param', schemaGameSSE), async c => {
-    const user = c.user as UserDB;
+    const sid = getCookie(c, 'sid');
+    if (!sid)
+      return c.notFound();
+
+    const user = c.session.get(sid);
+    if (!user)
+      return c.notFound();
+
     const param = c.req.valid('param');
     if (param.id !== c.userCurrentGameID)
       return c.notFound();
@@ -89,23 +96,19 @@ routerSSE
 
     return streamSSE(c, async stream => {
       while (true) {
-        const game = c.games.get(param.id);
-        if (!game) {
+        if ((game.timestamp.getTime() + ((60 * 5) *1000)) - Date.now() <= 0) {
           await stream.writeSSE({
             data: 'null',
-            event: 'not-found'
+            event: 'ended'
           });
 
           break;
         }
 
-        if (game.ended) {
-          await stream.writeSSE({
-            data: JSON.stringify(game),
-            event: 'ended',
-          });
-          break;
-        }
+        await stream.writeSSE({
+          data: JSON.stringify(game),
+          event: 'broadcast'
+        });
 
         await stream.sleep(1000);
       }

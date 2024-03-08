@@ -10,8 +10,8 @@ import { middlewareAuth } from '../middlewares/middleware.auth.js';
 import { type UserDB } from '../data/definition.player.js';
 import { type Game, Round } from '../data/definition.game.js';
 import {
-  cleanGames,
-  cleanRooms,
+  clearGames,
+  clearRooms,
   dequeueRoom,
   enqueueRoom,
   peekRoom,
@@ -40,12 +40,16 @@ export const routerGame = new Hono();
 routerGame
   .use(middlewareAuth())
   .use(async (c, next) => {
-    cleanRooms(c);
-    cleanGames(c);
+    clearRooms(c);
+    clearGames(c);
 
     await next();
   })
   .get('/gaming', async c => {
+    const user = c.user;
+    if (!user)
+      throw new HTTPException(401, { message: 'Unauthorized' });
+
     c.userIsInQueue = undefined;
     const gameID = c.userCurrentGameID;
     if (!gameID)
@@ -57,12 +61,14 @@ routerGame
 
     const player1 = await getUserByPublicId({ public_id: game.player1 }, c.mysql);
     const player2 = await getUserByPublicId({ public_id: game.player2 }, c.mysql);
+    const isPlayer1 = user.public_id === player1?.public_id;
 
     return c.html(
       c.views.renderAsync('pages/games/gaming-room', {
         game,
-        player1,
-        player2
+        uri: '/sse/game',
+        player: isPlayer1 ? player1 : player2,
+        opponent: isPlayer1 ? player2 : player1
       })
     );
   })
@@ -104,7 +110,7 @@ routerGame
 
           c.userIsInQueue = undefined;
           c.userCurrentGameID = uuid;
-          c.games.set(uuid, { ... game, timestamp: new Date() });
+          c.games.set(uuid, { ...game, timestamp: new Date() });
           c.playerInGames.set(game.player1, game.public_id);
           c.playerInGames.set(game.player2, game.public_id);
           return c.redirect('/games/gaming');
@@ -126,52 +132,46 @@ routerGame
     }
 
     throw new HTTPException(500, { message: 'Internal server error' });
-  });
-
-routerGame
-  .basePath('/json_api')
-  .post('/game/:id/:move', tbValidator('param', schemaPostGameIdMove), async c => {
+  })
+  .post('/round/:id/:move', tbValidator('param', schemaPostGameIdMove), async c => {
     const param = c.req.valid('param');
     const user = c.user as UserDB;
 
     const game = c.games.get(param.id);
-    if (game) {
-      if (
-        game.player1 !== user.public_id &&
-        game.player2 !== user.public_id
-      ) return c.json({ success: false, roundEnded: false });
+    if (!game)
+      return c.notFound();
 
-      const isPlayerPlayer1 = game.player1 === user.public_id;
+    const playerIsPartOfTheGame = game.player1 !== user.public_id && game.player2 !== user.public_id;
 
-      const round = c.rounds.get(game.public_id);
-      if (round) {
-        if (isPlayerPlayer1) {
-          round.dateP1 = new Date() as Date;
-          round.moveP1 = Number(param.move) as number;
-        } else {
-          round.dateP2 = new Date() as Date;
-          round.moveP2 = Number(param.move) as number;
-        }
+    if (playerIsPartOfTheGame)
+      return c.json({ success: false, roundEnded: false });
 
-        if (round.dateP1 &&
-          round.dateP2 &&
-          typeof round.moveP1 === 'number' &&
-          typeof round.moveP2 === 'number')
-        {
-          // The round is finished, then we proceed to dump it back into the game's rounds
-          game.rounds.push({
-            moveP1: round.moveP1,
-            dateP1: round.dateP1,
-            moveP2: round.moveP2,
-            dateP2: round.dateP2
-          });
+    const isPlayerPlayer1 = game.player1 === user.public_id;
 
-          c.rounds.delete(game.public_id);
+    let round = c.rounds.get(game.public_id);
+    if (!round)
+      round = {};
 
-          return c.json({ success: true, roundEnded: true });
-        }
-      }
+    if (isPlayerPlayer1 && !round.moveP1) {
+      round.moveP1 = Number(param.move);
+      round.dateP1 = new Date();
     }
 
-    return c.json({ success: false, roundEnded: false });
+    if (!isPlayerPlayer1 && !round.moveP2) {
+      round.moveP2 = Number(param.move);
+      round.dateP2 = new Date();
+    }
+
+    if (
+      (round.moveP1 && typeof round.moveP1 === 'string') &&
+      (round.dateP1 && !isNaN(round.dateP1.getTime())) &&
+      (round.moveP2 && typeof round.moveP2 === 'string') &&
+      (round.dateP2 && !isNaN(round.dateP2.getTime()))
+    ) {
+      game.rounds.push(round as any);
+      c.games.set(param.id, game);
+      c.rounds.delete(param.id);
+    }
+
+    return c.json({ success: true, roundEnded: true });
   })
