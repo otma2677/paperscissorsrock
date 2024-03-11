@@ -31,6 +31,7 @@ import { middlewareGame } from './middlewares/middleware.game.js';
 
 import { handlerErrors } from './handlers/handler.errors.js';
 import { handlerNotFound } from './handlers/handler.not-found.js';
+import { init } from './core/init.js';
 
 /**
  *
@@ -54,6 +55,8 @@ export const schemaOptions = Type.Object({
 export type Options = Static<typeof schemaOptions>;
 
 async function server(options?: Options) {
+  init();
+
   const isValid = Value.Check(schemaOptions, options);
   if (!isValid) {
     Array

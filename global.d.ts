@@ -6,6 +6,9 @@ declare global {
       PORT: string;
       HOST: string;
 
+      GAME_MAX_GAME: string;
+      GAME_MAX_WAIT: string;
+
       MYSQL_PORT: string;
       MYSQL_HOST: string;
       MYSQL_PASS: string;
