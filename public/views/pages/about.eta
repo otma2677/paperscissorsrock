@@ -1,0 +1,9 @@
+<% layout('../layouts/no-menu-layout.eta', { title: 'Privacy' }) %>
+
+<h1>About</h1>
+<p>
+  It is not a commercial website.
+</p>
+<p>
+  All icons come from <a href="https://icons8.com/">icons8</a>
+</p>
