@@ -3,11 +3,11 @@
  */
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
-import { HTTPException } from 'hono/http-exception';
 import { tbValidator } from '@hono/typebox-validator';
 import { Type } from '@sinclair/typebox';
-import { UserDB } from '../data/definition.player.js';
 import { getCookie } from 'hono/cookie';
+import { dumpGame, findWinner } from '../data/service.game.js';
+import { HTTPException } from 'hono/http-exception';
 
 /**
  *
@@ -34,7 +34,6 @@ routerSSE
     const user = c.session.get(sid);
     if (!user)
       return c.notFound();
-
 
     return streamSSE(c, async stream => {
       let count = 0;
@@ -75,14 +74,6 @@ routerSSE
     });
   })
   .get('/game/:id', tbValidator('param', schemaGameSSE), async c => {
-    const sid = getCookie(c, 'sid');
-    if (!sid)
-      return c.notFound();
-
-    const user = c.session.get(sid);
-    if (!user)
-      return c.notFound();
-
     const param = c.req.valid('param');
     if (param.id !== c.userCurrentGameID)
       return c.notFound();
@@ -91,26 +82,53 @@ routerSSE
     if (!game)
       return c.notFound();
 
+    const sid = getCookie(c, 'sid');
+    if (!sid)
+      throw new HTTPException(401, { message: 'Unauthorized' });
+
+    const user = c.session.get(sid);
+    if (!user)
+      throw new HTTPException(401, { message: 'Unauthorized' });
+
     if (!(game.player1 === user.public_id || game.player2 === user.public_id))
       throw new HTTPException(401, { message: 'Unauthorized' });
 
     return streamSSE(c, async stream => {
       while (true) {
-        if ((game.timestamp.getTime() + ((60 * 5) *1000)) - Date.now() <= 0) {
-          await stream.writeSSE({
-            data: 'null',
-            event: 'ended'
-          });
+        if ((game.timestamp.getTime() + ((60 * Number(process.env.GAME_MAX_GAME)) *1000)) - Date.now() <= 0) {
+          game.ended_at = new Date();
+          game.ended = 1;
+          if (game.rounds.length >= 3) {
+            game.aborted = 0
+            findWinner(game);
+          }
 
           break;
         }
+
+        if (game.ended === 1)
+          break;
 
         await stream.writeSSE({
           data: JSON.stringify(game),
           event: 'broadcast'
         });
 
-        await stream.sleep(1000);
+        await stream.sleep(2000);
+      }
+
+      c.games.delete(game.public_id);
+      const inserted = await dumpGame(c, game);
+      if (inserted[0]?.affectedRows === 1) {
+        await stream.writeSSE({
+          data: JSON.stringify(game),
+          event: 'graceful-end'
+        });
+      } else {
+        await stream.writeSSE({
+          data: JSON.stringify(game),
+          event: 'internal-error'
+        });
       }
 
       await stream.close();

@@ -3,35 +3,44 @@
  */
 import { type Context } from 'hono';
 import { type ResultSetHeader } from 'mysql2/promise';
+import { GameMiddlewareDefinition } from '../middlewares/middleware.game.js';
 
 /**
  * Cleaning functions
  */
+export function findWinner(game: GameMiddlewareDefinition) {
+  let p1Points = 0;
+  let p2Points = 0;
+
+  for (const round of game.rounds) {
+    if (round.moveP1 === round.moveP2)
+      continue;
+    else if (round.moveP1 > round.moveP2 && round.moveP1 !== 0)
+      p1Points += 1;
+    else
+      p2Points += 1;
+  }
+
+  if (p1Points === p2Points)
+    game.winner = 0;
+  else if (p1Points > p2Points)
+    game.winner = 1;
+  else
+    game.winner = 2;
+}
+
 export function clearGames(c: Context) {
   c
     .games
     .forEach(async (v, k, m) => {
-      if ((Date.now() - v.timestamp.getTime()) >= ((60 * 5) *1000)) {
+      if ((Date.now() - v.timestamp.getTime()) >= ((60 * Number(process.env.GAME_MAX_GAME)) *1000)) {
         c.playerInGames.delete(v.player1);
         c.playerInGames.delete(v.player2);
 
-        const insertedGame = await c
-          .mysql
-          .query(
-            `INSERT INTO games(created_at, public_id, player1, player2, rounds, winner, aborted, ended_at, ended, details) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              v.timestamp,
-              v.public_id,
-              v.player1,
-              v.player2,
-              JSON.stringify(v.rounds ?? []),
-              v.winner,
-              v.aborted ?? true,
-              v.ended_at ?? new Date(),
-              v.ended ?? true,
-              v.details ? JSON.stringify(v.details) : null
-            ]
-          ) as Array<ResultSetHeader>;
+        if (v.rounds.length >= 3)
+          findWinner(v);
+
+        const insertedGame = await dumpGame(c, v);
 
         if (insertedGame[0])
           if (insertedGame[0].affectedRows >= 1)
@@ -40,11 +49,31 @@ export function clearGames(c: Context) {
     });
 }
 
+export async function dumpGame(c: Context, game: GameMiddlewareDefinition) {
+  return await c
+    .mysql
+    .query(
+      `INSERT INTO games(created_at, public_id, player1, player2, rounds, winner, aborted, ended_at, ended, details) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        game.timestamp,
+        game.public_id,
+        game.player1,
+        game.player2,
+        JSON.stringify(game.rounds ?? []),
+        game.winner,
+        game.aborted ?? true,
+        game.ended_at ?? new Date(),
+        game.ended ?? true,
+        game.details ? JSON.stringify(game.details) : null
+      ]
+    ) as Array<ResultSetHeader>;
+}
+
 export function clearRooms(c: Context) {
   c
     .rooms
     .forEach((v, i, a) => {
-      if ((Date.now() - v.sinceWhen.getTime()) >= ((60 * 1) *1000))
+      if ((Date.now() - v.sinceWhen.getTime()) >= ((60 * Number(process.env.GAME_MAX_WAIT)) *1000))
         delete a[i];
     });
 }
