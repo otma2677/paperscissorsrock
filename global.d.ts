@@ -8,6 +8,7 @@ declare global {
 
       GAME_MAX_GAME: string;
       GAME_MAX_WAIT: string;
+      GAME_MAX_ROUNDS: string;
 
       MYSQL_PORT: string;
       MYSQL_HOST: string;

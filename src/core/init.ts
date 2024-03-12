@@ -21,6 +21,9 @@ export function init() {
   if (Number.isNaN(Number(process.env.GAME_MAX_WAIT)))
     throw new Error('GAME_MAX_WAIT is not set, in environment variables.');
 
+  if (Number.isNaN(Number(process.env.GAME_MAX_ROUNDS)))
+    throw new Error('GAME_MAX_ROUNDS is not set, in environment variables.');
+
   if (Number.isNaN(Number(process.env.MYSQL_PORT)))
     throw new Error('MYSQL_PORT is not set and or is not a number, in environment variables.');
 
