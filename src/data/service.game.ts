@@ -53,7 +53,7 @@ export async function dumpGame(c: Context, game: GameMiddlewareDefinition) {
   return await c
     .mysql
     .query(
-      `INSERT INTO games(created_at, public_id, player1, player2, rounds, winner, aborted, ended_at, ended, details) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO games(created_at, public_id, player1, player2, rounds, winner, aborted, ended_at, ended, details) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) on duplicate key update ended_at = current_timestamp`,
       [
         game.timestamp,
         game.public_id,

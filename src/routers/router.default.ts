@@ -45,6 +45,7 @@ const schemaPostContact = Type.Object({
 routerDefault
   .get('/', async c => c.html(await c.views.renderAsync('pages/index', {})))
   .get('/privacy', async c => c.html(await c.views.renderAsync('pages/privacy', {})))
+  .get('/about', async c => c.html(await c.views.renderAsync('pages/about', {})))
   .get('/past-games/:page', tbValidator('param', schemaParamPageStringToNumber), async c => {
     const param = Value.Decode(schemaParamPageStringToNumber, c.req.valid('param'));
     const size = 50;

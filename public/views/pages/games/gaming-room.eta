@@ -7,13 +7,21 @@
     You play against <strong><%= it.opponent.name %></strong>, as
     <strong><%= it.player.name %></strong>
 
-    hr
+    <hr>
 
     <strong><span id="countdown"></span></strong> <br>
     <span id="status" color="darkblue"></span>
     <span id="error" color="darkred"></span>
     <span id="ended" color="darkgreen"></span>
   </header>
+
+  <form id="moves">
+    <button id="move_0" name="0">Paper</button>
+    <button id="move_1" name="1">Scissor</button>
+    <button id="move_2" name="2">Rock</button>
+  </form>
+
+  <hr>
 
   <div id="gameState">
 
@@ -27,6 +35,7 @@
   const errorSpan = document.getElementById('error');
   const endedSpan = document.getElementById('ended');
   const gameState = document.getElementById('gameState');
+  const makeMove = document.getElementById('moves');
 
   // Server provided values
   const id = '<%= it.game.public_id %>';
@@ -36,29 +45,64 @@
   // Values
   let interval;
 
+  /**
+   * Form Handler
+   */
+  makeMove.addEventListener('submit', event => {
+    event.stopPropagation();
+    event.preventDefault();
 
+    const value = event.submitter.getAttribute('name');
+
+    console.log(value);
+
+    makeMove.childNodes.forEach(node => node.disabled = true);
+    const uri = new URL(`/games/round/<%= it.game.public_id %>/${ value }`, window.location);
+    const headers = new Headers();
+    headers.set('Content-Type', 'application/json');
+    fetch(uri, { method: 'POST', mode: 'cors', credentials: 'same-origin', headers })
+      .then(response => {
+        console.log(response);
+        setTimeout(() => makeMove.childNodes.forEach(node => node.disabled = false), 750);
+      })
+      .catch(err => {
+        console.error(err);
+        setTimeout(() => makeMove.childNodes.forEach(node => node.disabled = false), 750);
+      });
+  });
+
+  /**
+   *
+   */
   source.onerror = event => {
     clearInterval(interval);
     cleanElements();
     errorSpan.innerText = 'Cannot reach the server.';
   };
 
-  source.addEventListener('ended', event => {
+  source.addEventListener('graceful-end', event => {
     clearInterval(interval);
     cleanElements();
     statusSpan.innerText = 'Status: Ended';
     endedSpan.innerText = 'Game has been ended';
+
+    renderGameState(event);
   });
 
-  source.addEventListener('broadcast', event => {
-    gameState.innerText = event.data;
+  source.addEventListener('internal-error', event => {
+    clearInterval(interval);
+    cleanElements();
+    statusSpan.innerText = 'Status: Error';
+    endedSpan.innerText = 'Internal server error';
   });
+
+  source.addEventListener('broadcast', renderGameState);
 
   // Countdown
   interval = setInterval(() => {
     const startTime = new Date('<%= it.game.timestamp %>');
     const endTime = new Date(startTime.getTime() + ((60 * 5) * 1000));
-    const timeLeft = Math.floor((endTime.getTime() - Date.now()) /1000);
+    const timeLeft = Math.floor((endTime.getTime() - Date.now()) / 1000);
     const formatted = formatDate(timeLeft);
 
     countdownSpan.innerText = `Time: ${ formatted }`;
@@ -92,5 +136,45 @@
     stringSeconds = stringSeconds.length === 1 ? `0${ stringSeconds }` : stringSeconds;
 
     return `${ stringMinutes }:${ stringSeconds }`;
+  }
+
+  function renderGameState(event) {
+    const data = JSON.parse(event.data);
+    const rounds = data.rounds;
+    let htmlDATA = '';
+
+    if (rounds?.length >= 1) {
+      count = 0;
+      const roundHTML = rounds
+        .map(round => {
+          const tr = `
+          <tr>
+            <td>${ count }</td>
+            <td>${ round.moveP1 }</td>
+            <td>${ round.moveP2 }</td>
+          </tr>`;
+
+          count++;
+          return tr;
+        })
+        .join('');
+
+      htmlDATA = `
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">N.</th>
+            <th scope="col"><strong><%= it.player1.name %></strong></th>
+            <th scope="col"><%= it.player2.name %></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${ roundHTML }
+        </tbody>
+      </table>
+    `;
+    } else htmlDATA = '<p>No rounds done yet</p>';
+
+    gameState.innerHTML = htmlDATA;
   }
 </script>

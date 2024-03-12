@@ -35,10 +35,24 @@ routerPlayer
     const gameRows = await c
       .mysql
       .query(
-        'SELECT * FROM games WHERE player1 = ? OR player2 = ? ORDER BY created_at DESC LIMIT 5',
+        `
+            select games.created_at,
+                   games.public_id,
+                   u1.name as player1,
+                   u2.name as player2,
+                   games.winner
+            from games
+                     inner join users as u1 on games.player1 = u1.public_id
+                     inner join users as u2 on games.player2 = u2.public_id
+            where games.player1 = ?
+            or games.player2 = ?
+            order by created_at desc
+            limit ?
+        `.trim(),
         [
           user.public_id,
-          user.public_id
+          user.public_id,
+          10
         ]
       )
 

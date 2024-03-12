@@ -20,7 +20,19 @@
       </thead>
       <tbody>
       <% for (const game of it.recentGames) { %>
-      <%~ include('../../components/past-games.tr-game.eta', { game }) %>
+        <tr>
+          <th scope="row"><%= game.public_id %></th>
+          <th><%= game.created_at.toLocaleDateString() %></th>
+          <td><%= game.player1 %></td>
+          <td><%= game.player2 %></td>
+          <% if (game.winner === null) { %>
+          <td>Aborted</td>
+          <% } else if (game.winner === 0) { %>
+          <td>Draw</td>
+          <% } else { %>
+          <td><%= game.winner === 1 ? game.player1 : game.player2 %></td>
+          <% } %>
+        </tr>
       <% } %>
       </tbody>
     </table>

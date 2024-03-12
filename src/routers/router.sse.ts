@@ -75,10 +75,7 @@ routerSSE
   })
   .get('/game/:id', tbValidator('param', schemaGameSSE), async c => {
     const param = c.req.valid('param');
-    if (param.id !== c.userCurrentGameID)
-      return c.notFound();
-
-    const game = c.games.get(c.userCurrentGameID);
+    const game = c.games.get(param.id);
     if (!game)
       return c.notFound();
 
@@ -95,10 +92,14 @@ routerSSE
 
     return streamSSE(c, async stream => {
       while (true) {
-        if ((game.timestamp.getTime() + ((60 * Number(process.env.GAME_MAX_GAME)) *1000)) - Date.now() <= 0) {
+        if (
+          ((game.timestamp.getTime() + ((60 * Number(process.env.GAME_MAX_GAME)) *1000)) - Date.now() <= 0) ||
+          game.rounds.length >= Number(process.env.GAME_MAX_ROUNDS)
+        ) {
           game.ended_at = new Date();
           game.ended = 1;
-          if (game.rounds.length >= 3) {
+
+          if (game.rounds.length >= Number(process.env.GAME_MAX_ROUNDS)) {
             game.aborted = 0
             findWinner(game);
           }
@@ -119,6 +120,7 @@ routerSSE
 
       c.games.delete(game.public_id);
       const inserted = await dumpGame(c, game);
+
       if (inserted[0]?.affectedRows === 1) {
         await stream.writeSSE({
           data: JSON.stringify(game),

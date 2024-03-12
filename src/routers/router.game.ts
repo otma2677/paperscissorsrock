@@ -51,11 +51,10 @@ routerGame
       throw new HTTPException(401, { message: 'Unauthorized' });
 
     c.userIsInQueue = undefined;
-    const gameID = c.userCurrentGameID;
-    if (!gameID)
-      return c.redirect('games/waiting');
+    if (!c.userCurrentGameID)
+      return c.redirect('/players/profile');
 
-    const game = c.games.get(gameID);
+    const game = c.games.get(c.userCurrentGameID);
     if (!game)
       throw new HTTPException(500, { message: 'Internal server error' });
 
@@ -68,7 +67,9 @@ routerGame
         game,
         uri: '/sse/game',
         player: isPlayer1 ? player1 : player2,
-        opponent: isPlayer1 ? player2 : player1
+        opponent: isPlayer1 ? player2 : player1,
+        player1,
+        player2
       })
     );
   })
@@ -141,37 +142,59 @@ routerGame
     if (!game)
       return c.notFound();
 
-    const playerIsPartOfTheGame = game.player1 !== user.public_id && game.player2 !== user.public_id;
+    const playerIsPartOfTheGame = game.player1 === user.public_id || game.player2 === user.public_id;
+    if (!playerIsPartOfTheGame)
+      return c.notFound();
 
-    if (playerIsPartOfTheGame)
-      return c.json({ success: false, roundEnded: false });
-
+    /**
+     *
+     */
     const isPlayerPlayer1 = game.player1 === user.public_id;
 
     let round = c.rounds.get(game.public_id);
-    if (!round)
-      round = {};
+    if (!round) round = {};
 
-    if (isPlayerPlayer1 && !round.moveP1) {
-      round.moveP1 = Number(param.move);
-      round.dateP1 = new Date();
+    if (isPlayerPlayer1) {
+      if (!round.moveP1) {
+        round.moveP1 = Number(param.move);
+        round.dateP1 = new Date();
+      } else {
+        c.status(400);
+        return c.json({ success: false, roundEnded: false });
+      }
+    } else {
+      if (!round.moveP2) {
+        round.moveP2 = Number(param.move);
+        round.dateP2 = new Date();
+      } else {
+        c.status(400);
+        return c.json({ success: false, roundEnded: false });
+      }
     }
 
-    if (!isPlayerPlayer1 && !round.moveP2) {
-      round.moveP2 = Number(param.move);
-      round.dateP2 = new Date();
+    c.rounds.set(game.public_id, round);
+
+    // Dump the game
+    if (round.moveP1 && round.moveP2) {
+        game.rounds.push(round as any);
+        c.games.set(param.id, game);
+        c.rounds.delete(param.id);
+
+        return c.json({ success: true, roundEnded: true });
     }
 
-    if (
-      (round.moveP1 && typeof round.moveP1 === 'string') &&
-      (round.dateP1 && !isNaN(round.dateP1.getTime())) &&
-      (round.moveP2 && typeof round.moveP2 === 'string') &&
-      (round.dateP2 && !isNaN(round.dateP2.getTime()))
-    ) {
-      game.rounds.push(round as any);
-      c.games.set(param.id, game);
-      c.rounds.delete(param.id);
-    }
-
-    return c.json({ success: true, roundEnded: true });
-  })
+    return c.json({ success: true, roundEnded: false });
+    // if (
+    //   (round.moveP1 && typeof round.moveP1 === 'string') &&
+    //   (round.dateP1 && !isNaN(round.dateP1.getTime())) &&
+    //   (round.moveP2 && typeof round.moveP2 === 'string') &&
+    //   (round.dateP2 && !isNaN(round.dateP2.getTime()))
+    // ) {
+    //   game.rounds.push(round as any);
+    //   c.games.set(param.id, game);
+    //   c.rounds.delete(param.id);
+    //
+    //   return c.json({ success: true, roundEnded: true });
+    // }
+    //
+  });
