@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { readdirSync, readFileSync, accessSync } from 'node:fs';
 import { createInterface } from 'node:readline/promises';
 import { createConnection } from 'mysql2/promise';
+import { fail } from 'node:assert';
 
 /**
  *
@@ -24,7 +25,9 @@ const migrations = parseMigrations();
 
 if (migrations.length <= 0) console.log('\n## No migrations available.');
 else if (answer.toLowerCase() === 'show') commandShow(migrations);
+else if (answer.toLowerCase() === 'erase') await commandErase();
 else if (answer.toLowerCase() === 'up') await commandUp(migrations);
+else if (answer.toLowerCase() === 'up-latest') await commandUpLatest(migrations);
 else console.error(`Input is not valid. Given input is "${ answer }"`);
 
 
@@ -33,26 +36,182 @@ await rl.close();
 /**
  * HANDLERS
  */
-async function commandUp(migrations) {
+async function commandErase() {
+  const connection = await createConnection({
+    port: process.env.MYSQL_PORT,
+    host: process.env.MYSQL_HOST,
+    password: process.env.MYSQL_PASS,
+    user: process.env.MYSQL_USER,
+    database: process.env.MYSQL_SCHEMA,
+    ssl: process.env.MYSQL_SSL
+  });
+
   try {
-    const connection = await createConnection({
-      port: process.env.MYSQL_PORT,
-      host: process.env.MYSQL_HOST,
-      password: process.env.MYSQL_PASS,
-      user: process.env.MYSQL_USER,
-      database: process.env.MYSQL_SCHEMA,
-      ssl: process.env.MYSQL_SSL
-    });
+    let failToCommit = {
+      err: false,
+      content: null
+    };
+
+    const results = await connection
+      .query('select TABLE_NAME as name from information_schema.TABLES where TABLE_SCHEMA = ?', [ process.env.MYSQL_SCHEMA ]);
+
+    const tables = results[0]
+      .filter(table => table['name'] !== 'migrations')
+      .filter(table => table['name'] !== 'migration_logs')
+      .map(table => table['name']);
+
+    for (const tableName of tables) {
+      try {
+        const result = await connection.execute(`drop table ${ tableName };`);
+
+        console.info(`Table ${ tableName } has been drop.`);
+      } catch (err) {
+
+        console.error(`Cannot drop table ${ tableName }. ${ err }`);
+        failToCommit.err = true;
+        failToCommit.content = JSON.stringify(err);
+      }
+    }
+
+    await connection.query('truncate migrations;');
+    console.info(`Table migrations has been cleaned.`);
+
+    await connection.query(
+      'INSERT INTO migration_logs(command, failed, result) VALUES(?, ?, ?)',
+      [ 'erase', true, JSON.stringify(failToCommit) ]
+    );
+
+    await connection.end();
+    process.exit(0);
+  } catch (err) {
+
+    await connection.query(
+      'INSERT INTO migration_logs(command, failed, result) VALUES(?, ?, ?)',
+      [ 'erase', true, JSON.stringify(err) ]
+    );
+    await connection.end();
+
+    console.error(err);
+    process.exit(1);
+  }
+}
+
+async function commandUpLatest(migrations) {
+  const connection = await createConnection({
+    port: process.env.MYSQL_PORT,
+    host: process.env.MYSQL_HOST,
+    password: process.env.MYSQL_PASS,
+    user: process.env.MYSQL_USER,
+    database: process.env.MYSQL_SCHEMA,
+    ssl: process.env.MYSQL_SSL
+  });
+
+  try {
+    let failToCommit = {
+      err: false,
+      content: null
+    };
+
+    const migrationRows = (await connection.query('SELECT * FROM migrations WHERE failed is false ORDER BY creation_date DESC'))[0];
+    let migrationsFromLastToLatest = [];
+
+    if (migrationRows.length === 0) {
+      migrationsFromLastToLatest = migrations;
+    } else {
+      for (const row of migrationRows) {
+        const foundMigration = migrations.findIndex(migration => migration.name === row.name);
+        if (foundMigration === -1) {
+          migrationsFromLastToLatest.push(row[0]);
+        }
+      }
+    }
+
+    if (migrationsFromLastToLatest.length >= 1) {
+      try {
+        await connection.beginTransaction();
+
+        for (const migration of migrationsFromLastToLatest) {
+          const chunks = migration
+            .content
+            .split(';')
+            .filter(stmt => stmt.length >= 10);
+
+          for (const chunk of chunks)
+            await connection.query(chunk);
+
+          await connection.query(
+            'INSERT INTO migrations(creation_date, name, path, content) VALUES(?, ?, ?, ?)',
+            [
+              migration.timestamp,
+              migration.name,
+              migration.path,
+              migration.content
+            ]
+          )
+        }
+
+        await connection.commit();
+        const names = migrations
+          .map(migration => migration.name)
+          .join(',\n');
+
+        console.info(`Migrations have been migrated up to the latest;\n${ names }`);
+
+      } catch (err) {
+
+        console.error(err);
+        await connection.rollback();
+        failToCommit.err = true;
+        failToCommit.content = JSON.stringify(err);
+      }
+
+    } else {
+      console.info(`No migrations need to be done.`);
+    }
+
+    await connection.query(
+      'INSERT INTO migration_logs(command, result) VALUES(?, ?)',
+      [ 'up-latest', JSON.stringify(failToCommit) ]
+    );
+    await connection.end();
+
+  } catch (err) {
+
+    await connection.query(
+      'INSERT INTO migration_logs(command, failed, result) VALUES(?, ?, ?)',
+      [ 'up-latest', true, JSON.stringify(err) ]
+    );
+    await connection.end();
+
+    console.error(err);
+  }
+}
+
+async function commandUp(migrations) {
+  const connection = await createConnection({
+    port: process.env.MYSQL_PORT,
+    host: process.env.MYSQL_HOST,
+    password: process.env.MYSQL_PASS,
+    user: process.env.MYSQL_USER,
+    database: process.env.MYSQL_SCHEMA,
+    ssl: process.env.MYSQL_SSL
+  });
+
+  try {
+    let failToCommit = {
+      err: false,
+      content: null
+    };
 
     const migrationRows = (await connection.query('SELECT * FROM migrations WHERE failed is false ORDER BY creation_date DESC LIMIT 1'))[0];
     const lastMigrationIndex = migrations.findIndex(migration => migration?.name === migrationRows[0]?.name);
-    if (!migrations[lastMigrationIndex +1]) {
-      console.error(`Migration of ${ migrationRows[0]?.name } has already been done at ${ migrationRows[0]?.inserted_at}.`);
+    if (!migrations[lastMigrationIndex + 1]) {
+      console.error(`Migration of ${ migrationRows[0]?.name } has already been done at ${ migrationRows[0]?.inserted_at }.`);
       process.exit(1);
     }
 
-    const migrationToBeInserted = lastMigrationIndex === -1 ? migrations[0] : migrations[lastMigrationIndex +1];
-    const lastMigration = lastMigrationIndex === -1 ? migrations[0] : migrations[lastMigrationIndex +1];
+    const migrationToBeInserted = lastMigrationIndex === -1 ? migrations[0] : migrations[lastMigrationIndex + 1];
+    const lastMigration = lastMigrationIndex === -1 ? migrations[0] : migrations[lastMigrationIndex + 1];
 
 
     /**
@@ -82,6 +241,11 @@ async function commandUp(migrations) {
           ]
         ))[0];
 
+        const logs = (await connection.query(
+          'INSERT INTO migration_logs(command, result) VALUES(?, ?)',
+          [ 'up', result ]
+        ))[0];
+
         if (result.affectedRows === 1)
           console.log(`Migration ${ lastMigration.name } has been successfully applied.`);
 
@@ -100,6 +264,8 @@ async function commandUp(migrations) {
           ]
         );
 
+        failToCommit.err = true;
+        failToCommit.content = JSON.stringify(err);
         console.error(err);
         console.error(`No changes to the database have been made.`);
       }
@@ -120,20 +286,45 @@ async function commandUp(migrations) {
       console.error(err);
     }
 
+    await connection.query(
+      'INSERT INTO migration_logs(command, result) VALUES(?, ?)',
+      [ 'up', JSON.stringify(failToCommit) ]
+    );
+
     await connection.end();
     process.exit(0);
   } catch (err) {
+
+    await connection.query(
+      'INSERT INTO migration_logs(command, failed, result) VALUES(?, ?, ?)',
+      [ 'up', true, JSON.stringify(err) ]
+    );
+
     console.error(err);
     await rl.close();
     process.exit(1);
   }
-
 }
 
-function commandShow(migrations) {
-  for (const migration of migrations) {
+async function commandShow(migrations) {
+  for (const migration of migrations)
     console.log(`${ migration.name } created at ${ migration.timestamp.toLocaleTimeString() }`);
-  }
+
+  const connection = await createConnection({
+    port: process.env.MYSQL_PORT,
+    host: process.env.MYSQL_HOST,
+    password: process.env.MYSQL_PASS,
+    user: process.env.MYSQL_USER,
+    database: process.env.MYSQL_SCHEMA,
+    ssl: process.env.MYSQL_SSL
+  });
+
+  await connection.query(
+    'INSERT INTO migration_logs(command, result) VALUES(?, (JSON_ARRAY()))',
+    [ 'show' ]
+  );
+
+  await connection.end();
 }
 
 /**
