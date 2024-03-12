@@ -75,7 +75,7 @@ routerGame
   .get('/waiting', async c => {
     const user = c.user as UserDB;
     const pathURI = '/sse/wait';
-    const maxTime = 60 * 1;
+    const maxTime = 60 * Number(process.env.GAME_MAX_WAIT);
 
     if (c.userCurrentGameID)
       return c.redirect('/games/gaming');

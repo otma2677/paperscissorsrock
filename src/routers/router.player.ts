@@ -4,7 +4,6 @@
 import { Hono } from 'hono';
 import { middlewareAuth } from '../middlewares/middleware.auth.js';
 import { HTTPException } from 'hono/http-exception';
-import { RowDataPacket } from 'mysql2/promise';
 
 /**
  *
