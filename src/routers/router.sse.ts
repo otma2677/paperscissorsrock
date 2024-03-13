@@ -115,24 +115,17 @@ routerSSE
           event: 'broadcast'
         });
 
-        await stream.sleep(2000);
+        await stream.sleep(1000);
       }
+
+      await stream.sleep(2000);
+      await stream.writeSSE({
+        data: JSON.stringify(game),
+        event: 'graceful-end'
+      });
 
       c.games.delete(game.public_id);
       const inserted = await dumpGame(c, game);
-
-      if (inserted[0]?.affectedRows === 1) {
-        await stream.writeSSE({
-          data: JSON.stringify(game),
-          event: 'graceful-end'
-        });
-      } else {
-        await stream.writeSSE({
-          data: JSON.stringify(game),
-          event: 'internal-error'
-        });
-      }
-
       await stream.close();
     });
   });

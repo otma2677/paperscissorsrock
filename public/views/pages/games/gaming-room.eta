@@ -7,6 +7,9 @@
     You play against <strong><%= it.opponent.name %></strong>, as
     <strong><%= it.player.name %></strong>
 
+    <br><br>
+    Game is in <%= it.bestOf %> rounds<br>
+
     <hr>
 
     <strong><span id="countdown"></span></strong> <br>
@@ -75,18 +78,31 @@
    *
    */
   source.onerror = event => {
-    clearInterval(interval);
-    cleanElements();
-    errorSpan.innerText = 'Cannot reach the server.';
+    if (!source.CLOSED) {
+      clearInterval(interval);
+      cleanElements();
+      errorSpan.innerText = 'Cannot reach the server.';
+      makeMove.childNodes.forEach(node => node.disabled = true);
+    }
   };
 
   source.addEventListener('graceful-end', event => {
+    renderGameState(event);
+    const data = JSON.parse(event.data);
+    makeMove.childNodes.forEach(node => node.disabled = true);
+
     clearInterval(interval);
     cleanElements();
-    statusSpan.innerText = 'Status: Ended';
-    endedSpan.innerText = 'Game has been ended';
+    statusSpan.innerHTML = 'Status: Ended <br>';
+    let str = '';
+    if (data.winner === 0)
+      str = 'it is a Draw';
+    if (data.winner === 1)
+      str = `it has been won by <%= it.player1.name %>`;
+    if (data.winner === 2)
+      str = `it has been won by <%= it.player1.name %>`;
 
-    renderGameState(event);
+    endedSpan.innerText = `Game has been ended and ${ str }`;
   });
 
   source.addEventListener('internal-error', event => {
@@ -94,6 +110,7 @@
     cleanElements();
     statusSpan.innerText = 'Status: Error';
     endedSpan.innerText = 'Internal server error';
+    makeMove.childNodes.forEach(node => node.disabled = true);
   });
 
   source.addEventListener('broadcast', renderGameState);
@@ -150,8 +167,8 @@
           const tr = `
           <tr>
             <td>${ count }</td>
-            <td>${ round.moveP1 }</td>
-            <td>${ round.moveP2 }</td>
+            <td>${ round.moveP1 === 0 ? 'PAPER' : round.moveP1 === 1 ? 'SCISSOR' : 'ROCK' }</td>
+            <td>${ round.moveP2 === 0 ? 'PAPER' : round.moveP2 === 1 ? 'SCISSOR' : 'ROCK' }</td>
           </tr>`;
 
           count++;

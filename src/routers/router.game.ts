@@ -69,7 +69,8 @@ routerGame
         player: isPlayer1 ? player1 : player2,
         opponent: isPlayer1 ? player2 : player1,
         player1,
-        player2
+        player2,
+        bestOf: Number(process.env.GAME_MAX_ROUNDS)
       })
     );
   })
@@ -175,7 +176,7 @@ routerGame
     c.rounds.set(game.public_id, round);
 
     // Dump the game
-    if (round.moveP1 && round.moveP2) {
+    if (typeof round.moveP1 === 'number' && typeof round.moveP2 === 'number') {
         game.rounds.push(round as any);
         c.games.set(param.id, game);
         c.rounds.delete(param.id);
@@ -184,17 +185,4 @@ routerGame
     }
 
     return c.json({ success: true, roundEnded: false });
-    // if (
-    //   (round.moveP1 && typeof round.moveP1 === 'string') &&
-    //   (round.dateP1 && !isNaN(round.dateP1.getTime())) &&
-    //   (round.moveP2 && typeof round.moveP2 === 'string') &&
-    //   (round.dateP2 && !isNaN(round.dateP2.getTime()))
-    // ) {
-    //   game.rounds.push(round as any);
-    //   c.games.set(param.id, game);
-    //   c.rounds.delete(param.id);
-    //
-    //   return c.json({ success: true, roundEnded: true });
-    // }
-    //
   });
