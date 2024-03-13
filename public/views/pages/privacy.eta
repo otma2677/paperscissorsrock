@@ -9,26 +9,6 @@
 
 <br><hr>
 
-<strong>Underlying providers</strong>
-<p>
-  At the very moment, we use Google cloud and their extended services to host
-  all of our infrastructure.
-</p>
-<p>
-  You can easily find their certification(s) and compliance(s) for security and
-  reliability, such as the ones following;
-</p>
-
-<br>
-
-<ul>
-  <li><a href="https://cloud.google.com/security/compliance/soc-2">Google cloud SOC 2</a></li>
-  <li><a href="https://cloud.google.com/security/compliance/iso-27001">Google cloud ISO 27001</a></li>
-  <li><a href="https://cloud.google.com/security/compliance/iso-50001">Google cloud ISO 5001</a></li>
-</ul>
-
-<br><hr>
-
 <strong>Data Collection</strong>
 <p>
   When you use some of our services, such as the contact form, we collect

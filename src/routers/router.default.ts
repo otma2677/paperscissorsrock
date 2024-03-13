@@ -48,7 +48,7 @@ routerDefault
   .get('/about', async c => c.html(await c.views.renderAsync('pages/about', {})))
   .get('/past-games/:page', tbValidator('param', schemaParamPageStringToNumber), async c => {
     const param = Value.Decode(schemaParamPageStringToNumber, c.req.valid('param'));
-    const size = 50;
+    const size = 20;
     const offset = size * (param.page - 1);
 
     const countSelectQuery = await c.mysql.query('SELECT count(*) FROM games') as Array<RowDataPacket>;
@@ -85,7 +85,7 @@ routerDefault
     const sid = getCookie(c, 'sid') ?? '';
     const auth = c.session.has(sid);
 
-    return c.html(c.views.renderAsync('pages/past-games', { games: rows[0], count, size, page: param.page, pages: Math.floor(count / size), auth }));
+    return c.html(c.views.renderAsync('pages/past-games', { games: rows[0], count, size, page: param.page, pages: Math.ceil(count / size), auth }));
   })
   .get('/stats', async c => {
     const countTotalPlayers = await countPlayers(c.mysql);

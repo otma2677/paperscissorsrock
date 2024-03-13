@@ -76,6 +76,9 @@
       </p>
     `;
 
+    setTimeout(() => {
+      window.location.assign('/games/gaming');
+    }, 1000);
     eventSource.close();
   });
 
@@ -93,24 +96,4 @@
       setTimeout(() => resolve(), time);
     });
   }
-  //
-  // function formatTime() {
-  //   count += 1;
-  //   const timeCalculated = maxTime - count;
-  //
-  //   let minutes = Math.floor(timeCalculated / 60);
-  //   let leftSecond = timeCalculated - (minutes * 60);
-  //
-  //   if (leftSecond.toString().length === 1)
-  //     leftSecond = `0${leftSecond}`;
-  //
-  //   if (minutes.toString().length === 1)
-  //     minutes = `0${minutes}`;
-  //
-  //   timer.innerText = `${ minutes }:${ leftSecond }`;
-  // }
-  //
-  // function refreshPage() {
-  //   location.reload();
-  // }
 </script>

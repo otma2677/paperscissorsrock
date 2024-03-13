@@ -118,7 +118,7 @@
   // Countdown
   interval = setInterval(() => {
     const startTime = new Date('<%= it.game.timestamp %>');
-    const endTime = new Date(startTime.getTime() + ((60 * 5) * 1000));
+    const endTime = new Date(startTime.getTime() + ((60 * Number('<%= it.maxTime %>')) * 1000));
     const timeLeft = Math.floor((endTime.getTime() - Date.now()) / 1000);
     const formatted = formatDate(timeLeft);
 
@@ -161,7 +161,7 @@
     let htmlDATA = '';
 
     if (rounds?.length >= 1) {
-      count = 0;
+      count = 1;
       const roundHTML = rounds
         .map(round => {
           const tr = `

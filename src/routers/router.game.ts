@@ -70,7 +70,8 @@ routerGame
         opponent: isPlayer1 ? player2 : player1,
         player1,
         player2,
-        bestOf: Number(process.env.GAME_MAX_ROUNDS)
+        bestOf: Number(process.env.GAME_MAX_ROUNDS),
+        maxTime: Number(process.env.GAME_MAX_GAME)
       })
     );
   })

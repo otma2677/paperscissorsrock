@@ -13,12 +13,12 @@
   </header>
 
   <% if (it.pages >= 2) { %>
-    <% if (it.page > 1 && it.page !== it.pages) { %>
-      <a href="/past-games/<%= it.page + 1 %>">>></a>
+    <% if (it.page !== 1) { %>
+      <a href="/past-games/<%= it.page - 1 %>"> << </a>
     <% } %>
 
-    <% if (it.page < it.pages && it.page !== 1) { %>
-      <a href="/past-games/<%= it.page - 1 %>"><<</a>
+    <% if (it.page >= 1 && it.page !== it.pages) { %>
+      <a href="/past-games/<%= it.page + 1 %>"> >> </a>
     <% } %>
   <% } %>
   <table>
