@@ -110,8 +110,8 @@ async function server(options?: Options) {
  * Start server
  */
 await server({
-  port: 3000,
-  host: '127.0.0.1',
+  port: Number(process.env.PORT),
+  host: process.env.HOST,
   mysqlOptions: {
     host: process.env.MYSQL_HOST,
     port: Number(process.env.MYSQL_PORT),
