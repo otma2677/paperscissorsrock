@@ -98,29 +98,32 @@ routerGame
     // If there is available players AND we're not in a queue, we try to match them together
     if (roomSize(c) >= 1 && !c.userIsInQueue) {
       const peekedRoom = peekRoom(c);
+      console.log('Peeked room', peekedRoom);
 
-      if (peekedRoom && ((Date.now() - peekedRoom.sinceWhen.getTime()) < ((60 * Number(process.env.GAME_MAX_WAIT)) *1000))) {
-        if (peekedRoom.playerID !== user.public_id) {
-          const room = dequeueRoom(c) as any;
+      if (peekedRoom && peekedRoom.playerID !== user.public_id && ((Date.now() - peekedRoom.sinceWhen.getTime()) < ((60 * Number(process.env.GAME_MAX_WAIT)) * 1000))) {
 
-          const uuid = crypto.randomUUID();
-          const game: Game = {
-            public_id: uuid,
-            player1: room.playerID,
-            player2: user.public_id,
-            rounds: []
-          }
+        console.log('Matching players together');
+        const room = dequeueRoom(c) as any;
 
-          c.userIsInQueue = undefined;
-          c.userCurrentGameID = uuid;
-          c.games.set(uuid, { ...game, timestamp: new Date() });
-          c.playerInGames.set(game.player1, game.public_id);
-          c.playerInGames.set(game.player2, game.public_id);
-          return c.redirect('/games/gaming');
+        const uuid = crypto.randomUUID();
+        const game: Game = {
+          public_id: uuid,
+          player1: room.playerID,
+          player2: user.public_id,
+          rounds: []
         }
+
+        c.userIsInQueue = undefined;
+        c.userCurrentGameID = uuid;
+        c.games.set(uuid, { ...game, timestamp: new Date() });
+        c.playerInGames.set(game.player1, game.public_id);
+        c.playerInGames.set(game.player2, game.public_id);
+        return c.redirect('/games/gaming');
+
       }
     }
 
+    console.log('Create a new room');
     // By default, we create a new entry in the queue and then send the user to it
     const roomID = enqueueRoom(c, user.public_id);
     if (roomID >= 0) {
@@ -178,11 +181,11 @@ routerGame
 
     // Dump the game
     if (typeof round.moveP1 === 'number' && typeof round.moveP2 === 'number') {
-        game.rounds.push(round as any);
-        c.games.set(param.id, game);
-        c.rounds.delete(param.id);
+      game.rounds.push(round as any);
+      c.games.set(param.id, game);
+      c.rounds.delete(param.id);
 
-        return c.json({ success: true, roundEnded: true });
+      return c.json({ success: true, roundEnded: true });
     }
 
     return c.json({ success: true, roundEnded: false });
