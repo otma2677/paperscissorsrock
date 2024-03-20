@@ -104,6 +104,8 @@ async function server(options?: Options) {
   }, info => {
     console.log(`http://${info.address}:${info.port}`);
   });
+
+  server.setTimeout(2000);
 }
 
 /**
