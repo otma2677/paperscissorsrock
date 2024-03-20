@@ -97,7 +97,7 @@ routerGame
     console.log('Matching games state, rooms available', c.rooms);
 
     // If there is available players AND we're not in a queue, we try to match them together
-    if (roomSize(c) >= 1 && !c.userIsInQueue) {
+    if (roomSize(c) >= 1) {
       const peekedRoom = peekRoom(c);
       console.log('Peeked room', peekedRoom);
 
