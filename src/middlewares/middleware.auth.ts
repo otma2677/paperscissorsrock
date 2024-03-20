@@ -23,6 +23,9 @@ export function middlewareAuth(): MiddlewareHandler {
     clearGames(c);
     clearRooms(c);
 
+    console.log('games', c.games);
+    console.log('rooms', c.rooms);
+
     // Assign ID (rooms & games) to user
     assignUserMetadata(c);
 
