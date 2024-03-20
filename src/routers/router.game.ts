@@ -94,6 +94,7 @@ routerGame
     }
 
     c.userIsInQueue = undefined;
+    console.log('Matching games state, rooms available', c.rooms);
 
     // If there is available players AND we're not in a queue, we try to match them together
     if (roomSize(c) >= 1 && !c.userIsInQueue) {
@@ -101,7 +102,6 @@ routerGame
       console.log('Peeked room', peekedRoom);
 
       if (peekedRoom && peekedRoom.playerID !== user.public_id && ((Date.now() - peekedRoom.sinceWhen.getTime()) < ((60 * Number(process.env.GAME_MAX_WAIT)) * 1000))) {
-
         console.log('Matching players together');
         const room = dequeueRoom(c) as any;
 
@@ -119,7 +119,6 @@ routerGame
         c.playerInGames.set(game.player1, game.public_id);
         c.playerInGames.set(game.player2, game.public_id);
         return c.redirect('/games/gaming');
-
       }
     }
 
