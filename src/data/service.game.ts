@@ -70,11 +70,11 @@ export async function dumpGame(c: Context, game: GameMiddlewareDefinition) {
 }
 
 export function clearRooms(c: Context) {
-  c.rooms = c
+  c
     .rooms
-    .filter((v, i, a) => {
-      if (!((Date.now() - v.sinceWhen.getTime()) >= ((60 * Number(process.env.GAME_MAX_WAIT)) *1000)))
-        return v;
+    .forEach((v, i, a) => {
+      if (((Date.now() - v.sinceWhen.getTime()) >= ((60 * Number(process.env.GAME_MAX_WAIT)) *1000)))
+        delete a[i];
     });
 }
 
