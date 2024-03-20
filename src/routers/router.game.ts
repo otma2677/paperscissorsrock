@@ -99,7 +99,7 @@ routerGame
     if (roomSize(c) >= 1 && !c.userIsInQueue) {
       const peekedRoom = peekRoom(c);
 
-      if (peekedRoom) {
+      if (peekedRoom && ((Date.now() - peekedRoom.sinceWhen.getTime()) < ((60 * Number(process.env.GAME_MAX_WAIT)) *1000))) {
         if (peekedRoom.playerID !== user.public_id) {
           const room = dequeueRoom(c) as any;
 
