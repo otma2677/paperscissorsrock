@@ -12,7 +12,7 @@
     body { display: flex; flex-direction: column; }
     #main { flex-grow: 1; }
   </style>
-  <title>PaperScissorsRock <%= it.title ? '- ' + it.title : '' %></title>
+  <title>JustAGame <%= it.title ? '- ' + it.title : '' %></title>
 </head>
 <body class="container" >
 <%~ await includeAsync('../components/header.eta') %>
