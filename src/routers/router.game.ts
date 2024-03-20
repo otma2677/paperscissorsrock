@@ -101,7 +101,7 @@ routerGame
       const peekedRoom = peekRoom(c);
       console.log('Peeked room', peekedRoom);
 
-      if (peekedRoom && peekedRoom.playerID !== user.public_id && ((Date.now() - peekedRoom.sinceWhen.getTime()) < ((60 * Number(process.env.GAME_MAX_WAIT)) * 1000))) {
+      if (peekedRoom && peekedRoom.playerID !== user.public_id) {
         console.log('Matching players together');
         const room = dequeueRoom(c) as any;
 
