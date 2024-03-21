@@ -7,6 +7,7 @@
   <link rel="icon" href="/statics/icons8-game-100.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
   <script defer src="/statics/js/create-game.js"></script>
+  <script defer src="https://eu.umami.is/script.js" data-website-id="96ab8b96-1fd2-4672-b021-32336c9738dc"></script>
   <style>
     html, body { height: 100% !important; }
     body { display: flex; flex-direction: column; }
