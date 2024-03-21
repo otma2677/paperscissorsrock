@@ -11,7 +11,6 @@
     <table>
       <thead>
       <tr>
-        <th scope="col">ID.</th>
         <th scope="col">From</th>
         <th scope="col">Player</th>
         <th scope="col">Player</th>
@@ -21,8 +20,7 @@
       <tbody>
       <% for (const game of it.recentGames) { %>
         <tr>
-          <th scope="row"><%= game.public_id %></th>
-          <th><%= game.created_at.toLocaleDateString() %></th>
+          <th scope="row"><%= game.created_at.toLocaleDateString() %></th>
           <td><%= game.player1 %></td>
           <td><%= game.player2 %></td>
           <% if (game.winner === null) { %>

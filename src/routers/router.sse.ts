@@ -23,6 +23,7 @@ routerSSE
     c.res.headers.set('Content-Type', 'text/event-stream');
     c.res.headers.set('Cache-Control', 'no-cache');
     c.res.headers.set('Connection', 'keep-alive');
+    c.res.headers.set('Transfer-Encoding', 'identity');
 
     await next();
   })
@@ -41,12 +42,13 @@ routerSSE
         if (c.playerInGames.get(user.public_id))
           break;
 
-        if (count >= 60)
+        if (count >= 30)
           break;
 
         await stream.writeSSE({
           data: 'null',
-          event: 'wait'
+          event: 'wait',
+          id: String(count)
         });
 
         count += 1;
@@ -92,10 +94,15 @@ routerSSE
 
     return streamSSE(c, async stream => {
       while (true) {
-        if (
-          ((game.timestamp.getTime() + ((60 * Number(process.env.GAME_MAX_GAME)) *1000)) - Date.now() <= 0) ||
-          game.rounds.length >= Number(process.env.GAME_MAX_ROUNDS)
-        ) {
+        if ((game.timestamp.getTime() + ((60 * Number(process.env.GAME_MAX_GAME)) *1000)) - Date.now() <= 0) {
+          game.ended_at = new Date();
+          game.ended = 1;
+          game.aborted = 0
+
+          break;
+        }
+
+        if (game.rounds.length >= Number(process.env.GAME_MAX_ROUNDS)) {
           game.ended_at = new Date();
           game.ended = 1;
 
@@ -118,7 +125,12 @@ routerSSE
         await stream.sleep(1000);
       }
 
-      await stream.sleep(2000);
+      await stream.writeSSE({
+        data: JSON.stringify(game),
+        event: 'broadcast'
+      });
+      await stream.sleep(1000);
+
       await stream.writeSSE({
         data: JSON.stringify(game),
         event: 'graceful-end'

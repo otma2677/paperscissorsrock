@@ -7,6 +7,7 @@
     <span style="color: darkgreen;" id="found"></span>
     <span style="color: darkblue;" id="wait"></span>
     <span style="color: darkred;" id="not-found"></span>
+    <span style="color: darkred;" id="error"></span>
   </header>
   <div>
     <span id="refresh"></span>
@@ -20,10 +21,14 @@
   const spanWait = document.getElementById('wait');
   const spanRefresh = document.getElementById('refresh');
   const spanNotFound = document.getElementById('not-found');
+  const spanError = document.getElementById('error');
+
+  let eventSource;
 
   // Source
   const urlTarget = new URL('<%= it.pathURI %>', location);
-  const eventSource = new EventSource(urlTarget);
+  if (!eventSource)
+    eventSource = new EventSource(urlTarget);
   let count = 0;
 
   //
@@ -37,7 +42,7 @@
 
   eventSource.onerror = event => {
     cleanElements();
-
+    spanError.innerText = 'Cannot reach the server at the moment.';
     eventSource.close();
   }
 

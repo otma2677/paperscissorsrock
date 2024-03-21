@@ -94,15 +94,13 @@ routerGame
     }
 
     c.userIsInQueue = undefined;
-    console.log('Matching games state, rooms available', c.rooms);
 
     // If there is available players AND we're not in a queue, we try to match them together
     if (roomSize(c) >= 1) {
       const peekedRoom = peekRoom(c);
-      console.log('Peeked room', peekedRoom);
+      console.log(peekedRoom);
 
       if (peekedRoom && peekedRoom.playerID !== user.public_id) {
-        console.log('Matching players together');
         const room = dequeueRoom(c) as any;
 
         const uuid = crypto.randomUUID();
@@ -122,7 +120,6 @@ routerGame
       }
     }
 
-    console.log('Create a new room');
     // By default, we create a new entry in the queue and then send the user to it
     const roomID = enqueueRoom(c, user.public_id);
     if (roomID >= 0) {

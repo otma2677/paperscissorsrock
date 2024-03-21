@@ -95,6 +95,7 @@
     cleanElements();
     statusSpan.innerHTML = 'Status: Ended <br>';
     let str = '';
+
     if (data.winner === 0)
       str = 'it is a Draw';
     if (data.winner === 1)

@@ -43,7 +43,12 @@ const schemaPostContact = Type.Object({
 });
 
 routerDefault
-  .get('/', async c => c.html(await c.views.renderAsync('pages/index', {})))
+  .get('/', async c => {
+    const sid = getCookie(c, 'sid') ?? '';
+    const auth = c.session.has(sid);
+
+    return c.html(await c.views.renderAsync('pages/index', { auth }));
+  })
   .get('/privacy', async c => c.html(await c.views.renderAsync('pages/privacy', {})))
   .get('/about', async c => c.html(await c.views.renderAsync('pages/about', {})))
   .get('/past-games/:page', tbValidator('param', schemaParamPageStringToNumber), async c => {

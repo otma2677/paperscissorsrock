@@ -13,20 +13,21 @@ export function findWinner(game: GameMiddlewareDefinition) {
   let p2Points = 0;
 
   for (const round of game.rounds) {
-    if (round.moveP1 === round.moveP2)
-      continue;
-    else if (round.moveP1 > round.moveP2 && round.moveP1 !== 0)
-      p1Points += 1;
-    else
-      p2Points += 1;
+    if (round.moveP1 === round.moveP2) continue;
+    if (round.moveP1 === 0 && round.moveP2 === 1) p2Points += 1;
+    if (round.moveP1 === 0 && round.moveP2 === 2) p1Points += 1;
+    if (round.moveP1 === 1 && round.moveP2 === 2) p2Points += 1;
+    if (round.moveP1 === 1 && round.moveP2 === 0) p1Points += 1;
+    if (round.moveP1 === 2 && round.moveP2 === 0) p2Points += 1;
+    if (round.moveP1 === 2 && round.moveP2 === 1) p1Points += 1;
   }
 
   if (p1Points === p2Points)
     game.winner = 0;
   else if (p1Points > p2Points)
-    game.winner = 2;
-  else
     game.winner = 1;
+  else
+    game.winner = 2;
 }
 
 export function clearGames(c: Context) {
@@ -37,8 +38,16 @@ export function clearGames(c: Context) {
         c.playerInGames.delete(v.player1);
         c.playerInGames.delete(v.player2);
 
-        if (v.rounds.length >= 3)
+        if (v.rounds.length >= Number(process.env.GAME_MAX_GAME)) {
           findWinner(v);
+          v.aborted = 0;
+        }
+        else {
+          v.aborted = 1;
+        }
+
+        v.ended_at = new Date();
+        v.ended = 1;
 
         const insertedGame = await dumpGame(c, v);
 
