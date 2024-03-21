@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node --env-file=.env dist/server.ts",
+    "start": "node --env-file=.env dist/server.js",
     "build": "tsc",
     "watch": "tsx watch --env-file=.env src/server.ts",
     "db:migrate": "node --env-file=.env ./bin/migrate.js",
