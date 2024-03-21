@@ -100,7 +100,7 @@
     if (data.winner === 1)
       str = `it has been won by <%= it.player1.name %>`;
     if (data.winner === 2)
-      str = `it has been won by <%= it.player1.name %>`;
+      str = `it has been won by <%= it.player2.name %>`;
 
     endedSpan.innerText = `Game has been ended and ${ str }`;
   });

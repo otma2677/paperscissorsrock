@@ -24,9 +24,9 @@ export function findWinner(game: GameMiddlewareDefinition) {
   if (p1Points === p2Points)
     game.winner = 0;
   else if (p1Points > p2Points)
-    game.winner = 1;
-  else
     game.winner = 2;
+  else
+    game.winner = 1;
 }
 
 export function clearGames(c: Context) {
