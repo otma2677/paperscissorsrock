@@ -22,7 +22,7 @@ try {
   const existingMigrationTable = availableTables.find(table => table['name'] === 'migrations');
 
   if (existingMigrationTable) {
-    console.log(`Table "migrations" already exists in schema "${ process.env.MYSQL_SCHEMA }"`);
+    console.info(`Table "migrations" already exists in schema "${ process.env.MYSQL_SCHEMA }"`);
     await connection.end();
     process.exit(0);
   }
@@ -40,7 +40,7 @@ try {
   const existingMigrationTable = availableTables.find(table => table['name'] === 'migration_logs');
 
   if (existingMigrationTable) {
-    console.log(`Table "migration_logs" already exists in schema "${ process.env.MYSQL_SCHEMA }"`);
+    console.info(`Table "migration_logs" already exists in schema "${ process.env.MYSQL_SCHEMA }"`);
     await connection.end();
     process.exit(0);
   }
@@ -85,7 +85,7 @@ try {
   const existingMigrationTable = availableTables.find(table => table['name'] === 'migrations');
 
   if (existingMigrationTable)
-    console.log(`Table "migrations" successfully created within "${ process.env.MYSQL_SCHEMA }".`);
+    console.info(`Table "migrations" successfully created within "${ process.env.MYSQL_SCHEMA }".`);
   else
     console.error(`Table "migrations" cannot be created within schema "${ process.env.MYSQL_SCHEMA }" for un unknown reason.`);
 
@@ -104,7 +104,7 @@ try {
   const existingMigrationTable = availableTables.find(table => table['name'] === 'migration_logs');
 
   if (existingMigrationTable)
-    console.log(`Table "migration_logs" successfully created within "${ process.env.MYSQL_SCHEMA }".`);
+    console.info(`Table "migration_logs" successfully created within "${ process.env.MYSQL_SCHEMA }".`);
   else
     console.error(`Table "migration_logs" cannot be created within schema "${ process.env.MYSQL_SCHEMA }" for un unknown reason.`);
 

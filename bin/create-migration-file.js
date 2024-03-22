@@ -60,7 +60,7 @@ if (isThereAComment.length >= 0) {
 
 writeFileSync(finalPath, defaultContent, { flag: 'ax' });
 
-console.log(`File created at ${ finalPath }`);
+console.info(`File created at ${ finalPath }`);
 
 await rl.close();
 

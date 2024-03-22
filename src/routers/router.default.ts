@@ -56,7 +56,9 @@ routerDefault
     const size = 20;
     const offset = size * (param.page - 1);
 
-    const countSelectQuery = await c.mysql.query('SELECT count(*) FROM games') as Array<RowDataPacket>;
+    const connection = await c.mysqlPool.getConnection();
+
+    const countSelectQuery = await connection.query('SELECT count(*) FROM games') as Array<RowDataPacket>;
     const count = countSelectQuery[0]?.[0]?.['count(*)'] as number | undefined;
 
     if (count === undefined)
@@ -66,8 +68,7 @@ routerDefault
       throw new HTTPException(500, { message: 'Internal Server Error' });
 
 
-    const rows = await c
-      .mysql
+    const rows = await connection
       .query(
         `
             select games.created_at,
@@ -87,14 +88,18 @@ routerDefault
         ]
       ) as Array<RowDataPacket>;
 
+    connection.release();
+
     const sid = getCookie(c, 'sid') ?? '';
     const auth = c.session.has(sid);
 
     return c.html(c.views.renderAsync('pages/past-games', { games: rows[0], count, size, page: param.page, pages: Math.ceil(count / size), auth }));
   })
   .get('/stats', async c => {
-    const countTotalPlayers = await countPlayers(c.mysql);
-    const countActivePlayers = await countPlayersActive(c.mysql);
+    const connection = await c.mysqlPool.getConnection();
+    const countTotalPlayers = await countPlayers(connection);
+    const countActivePlayers = await countPlayersActive(connection);
+    connection.release();
 
     const allRequestResultsValid = typeof countTotalPlayers === 'number' &&
       typeof countActivePlayers === 'number';
@@ -124,7 +129,9 @@ routerDefault
   })
   .post('/login', tbValidator('form', schemaPostLogin), async c => {
     const data = c.req.valid('form');
-    const user = await getUserByName(data, c.mysql);
+    const connection = await c.mysqlPool.getConnection();
+    const user = await getUserByName(data, connection);
+    connection.release();
 
     if (!user) {
       c.status(404);
@@ -187,7 +194,8 @@ routerDefault
         }));
     }
 
-    const user = await getUserByName(data, c.mysql);
+    const connection = await c.mysqlPool.getConnection();
+    const user = await getUserByName(data, connection);
 
     if (user) {
       c.status(400);
@@ -207,8 +215,10 @@ routerDefault
         pass: passAndSalt.bytesFinal.toString('hex'),
         salt: passAndSalt.bytesSalt.toString('hex')
       },
-      c.mysql
+      connection
     );
+
+    connection.release();
 
     if (inserted.affectedRows === 0)
       throw new HTTPException(500, { message: 'Internal Server Error' });

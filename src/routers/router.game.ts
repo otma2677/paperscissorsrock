@@ -58,8 +58,11 @@ routerGame
     if (!game)
       throw new HTTPException(500, { message: 'Internal server error' });
 
-    const player1 = await getUserByPublicId({ public_id: game.player1 }, c.mysql);
-    const player2 = await getUserByPublicId({ public_id: game.player2 }, c.mysql);
+    const connection = await c.mysqlPool.getConnection();
+    const player1 = await getUserByPublicId({ public_id: game.player1 }, connection);
+    const player2 = await getUserByPublicId({ public_id: game.player2 }, connection);
+
+    connection.release();
     const isPlayer1 = user.public_id === player1?.public_id;
 
     return c.html(
@@ -98,7 +101,6 @@ routerGame
     // If there is available players AND we're not in a queue, we try to match them together
     if (roomSize(c) >= 1) {
       const peekedRoom = peekRoom(c);
-      console.log(peekedRoom);
 
       if (peekedRoom && peekedRoom.playerID !== user.public_id) {
         const room = dequeueRoom(c) as any;

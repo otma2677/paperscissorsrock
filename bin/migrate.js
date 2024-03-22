@@ -12,7 +12,7 @@ import { fail } from 'node:assert';
  */
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 
-console.log(`  Choose an option in the next prompt;
+console.info(`  Choose an option in the next prompt;
 - up (Migrate one step up)
 - down (Migrate one step down)
 - show (Show all available migrations metadata)
@@ -23,7 +23,7 @@ const answer = await rl.question('What do you want to do ?\n');
 
 const migrations = parseMigrations();
 
-if (migrations.length <= 0) console.log('\n## No migrations available.');
+if (migrations.length <= 0) console.info('\n## No migrations available.');
 else if (answer.toLowerCase() === 'show') commandShow(migrations);
 else if (answer.toLowerCase() === 'erase') await commandErase();
 else if (answer.toLowerCase() === 'up') await commandUp(migrations);
@@ -247,7 +247,7 @@ async function commandUp(migrations) {
         ))[0];
 
         if (result.affectedRows === 1)
-          console.log(`Migration ${ lastMigration.name } has been successfully applied.`);
+          console.info(`Migration ${ lastMigration.name } has been successfully applied.`);
 
       } catch (err) {
         await connection.rollback();
@@ -308,7 +308,7 @@ async function commandUp(migrations) {
 
 async function commandShow(migrations) {
   for (const migration of migrations)
-    console.log(`${ migration.name } created at ${ migration.timestamp.toLocaleTimeString() }`);
+    console.info(`${ migration.name } created at ${ migration.timestamp.toLocaleTimeString() }`);
 
   const connection = await createConnection({
     port: process.env.MYSQL_PORT,

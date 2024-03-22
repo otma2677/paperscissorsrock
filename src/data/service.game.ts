@@ -59,8 +59,9 @@ export function clearGames(c: Context) {
 }
 
 export async function dumpGame(c: Context, game: GameMiddlewareDefinition) {
-  return await c
-    .mysql
+  const connection = await c.mysqlPool.getConnection();
+
+  const response = await connection
     .query(
       `INSERT INTO games(created_at, public_id, player1, player2, rounds, winner, aborted, ended_at, ended, details) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) on duplicate key update ended_at = current_timestamp`,
       [
@@ -76,6 +77,9 @@ export async function dumpGame(c: Context, game: GameMiddlewareDefinition) {
         game.details ? JSON.stringify(game.details) : null
       ]
     ) as Array<ResultSetHeader>;
+
+  connection.release();
+  return response;
 }
 
 export function clearRooms(c: Context) {

@@ -3,7 +3,7 @@
  */
 import { Value } from '@sinclair/typebox/value';
 import {
-  type Connection,
+  type Connection, PoolConnection,
   type ResultSetHeader,
   type RowDataPacket
 } from 'mysql2/promise';
@@ -15,7 +15,7 @@ import { HTTPException } from 'hono/http-exception';
 /**
  *
  */
-export async function insertUser(obj: Omit<UserDB, 'id' | 'created_at' | 'public_id'>, connection: Connection) {
+export async function insertUser(obj: Omit<UserDB, 'id' | 'created_at' | 'public_id'>, connection: PoolConnection) {
   const inserted = await connection
     .query(
       'INSERT INTO users(name, pass, salt) VALUES(?, ?, ?)',
@@ -29,7 +29,7 @@ export async function insertUser(obj: Omit<UserDB, 'id' | 'created_at' | 'public
   return inserted[0] as ResultSetHeader;
 }
 
-export async function getUserByName(obj: Pick<UserDB, 'name'>, connection: Connection) {
+export async function getUserByName(obj: Pick<UserDB, 'name'>, connection: PoolConnection) {
   const rows = await connection
     .query('SELECT * FROM users WHERE name = ?', [ obj.name ]) as Array<RowDataPacket>;
 
@@ -42,7 +42,7 @@ export async function getUserByName(obj: Pick<UserDB, 'name'>, connection: Conne
   return rows[0][0] as UserDB;
 }
 
-export async function getUserByPublicId(obj: Pick<UserDB, 'public_id'>, connection: Connection) {
+export async function getUserByPublicId(obj: Pick<UserDB, 'public_id'>, connection: PoolConnection) {
   const rows = await connection
     .query('SELECT * FROM users WHERE public_id = ?', [ obj.public_id ]) as Array<RowDataPacket>;
 
@@ -55,7 +55,7 @@ export async function getUserByPublicId(obj: Pick<UserDB, 'public_id'>, connecti
   return rows[0][0] as UserDB;
 }
 
-export async function countPlayers(connection: Connection) {
+export async function countPlayers(connection: PoolConnection) {
   const rowsTotalPlayers = await connection
     .query('SELECT count(*) FROM users') as Array<RowDataPacket>;
 
@@ -65,7 +65,7 @@ export async function countPlayers(connection: Connection) {
   return countTotalPlayer['count(*)'] as number | undefined;
 }
 
-export async function countPlayersActive(connection: Connection) {
+export async function countPlayersActive(connection: PoolConnection) {
   const rowsActivePlayers = await connection
     .query(
       'select count(*) from users where timestampdiff(minute, created_at, current_timestamp) <= 15'
@@ -113,12 +113,15 @@ export async function setOrUpdateUserSession(c: Context) {
   c.session.set(newSessionID, maybeUser);
   c.user = maybeUser;
 
-  const inserted = await c
-    .mysql
+  const connection = await c.mysqlPool.getConnection();
+
+  const inserted = await connection
     .query(
       'INSERT INTO connections(user_id) VALUES(?) on duplicate key update created_at = current_timestamp',
       [ maybeUser.id ]
     ) as Array<ResultSetHeader>;
+
+  connection.release();
 
   if (!inserted[0] || (inserted[0]?.['affectedRows'] === 0))
     throw new HTTPException(500, { message: 'Internal server error' });

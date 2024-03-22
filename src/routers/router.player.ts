@@ -32,8 +32,8 @@ routerPlayer
       throw new HTTPException(500, { message: 'Internal server error' });
 
     // Find recent games played (~ 5)
-    const gameRows = await c
-      .mysql
+    const connection = await c.mysqlPool.getConnection();
+    const gameRows = await connection
       .query(
         `
             select games.created_at,
@@ -55,6 +55,8 @@ routerPlayer
           10
         ]
       )
+
+    connection.release();
 
     if (!gameRows[0])
       throw new HTTPException(500, { message: 'Internal server error' });

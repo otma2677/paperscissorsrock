@@ -102,7 +102,7 @@ async function server(options?: Options) {
     port: options.port,
     hostname: options.host
   }, info => {
-    console.log(`http://${info.address}:${info.port}`);
+    console.info(`http://${info.address}:${info.port}`);
   });
 
   server.setTimeout(1250);
