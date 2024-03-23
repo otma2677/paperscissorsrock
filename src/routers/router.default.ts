@@ -234,14 +234,16 @@ routerDefault
     if (!address)
       address = c.req.header('X-Real-Ip');
 
-    const noSpamResult = (await c
-      .mysql
+    const connection = await c.mysqlPool.getConnection();
+
+    const noSpamResult = (await connection
       .query(
         'SELECT count(*) FROM messages WHERE timediff(now(), created_at) <= 50 AND email = ? OR ip_address = ?',
         [ data.email, address ]
       )) as Array<RowDataPacket>;
 
     if (noSpamResult[0] && noSpamResult[0][0]['count(*)'] >= 1) {
+      connection.release();
       c.status(403);
       return c.html(
         c.views.renderAsync('pages/contact', {
@@ -254,14 +256,14 @@ routerDefault
     }
 
 
-    const noFloodResult = await c
-      .mysql
+    const noFloodResult = await connection
       .query(
         'SELECT count(*) FROM messages WHERE timediff(now(), created_at) <= (24 * 60 * 60) AND email = ? OR ip_address = ?',
         [ data.email, address ]
       ) as Array<RowDataPacket>;
 
     if (noFloodResult[0] && noFloodResult[0][0]['count(*)'] > 5) {
+      connection.release();
       c.status(403);
       return c.html(
         c.views.renderAsync('pages/contact', {
@@ -273,8 +275,7 @@ routerDefault
       );
     }
 
-    const insertResult = await c
-      .mysql
+    const insertResult = await connection
       .query(
         'INSERT INTO messages(title, email, content, ip_address) VALUES(?, ?, ?, ?)',
         [
@@ -286,6 +287,7 @@ routerDefault
       ) as Array<ResultSetHeader>;
 
     if (insertResult[0] && insertResult[0].affectedRows <= 0) {
+      connection.release();
       c.status(500);
       return c.html(
         c.views.renderAsync('pages/contact', {
@@ -297,6 +299,7 @@ routerDefault
       );
     }
 
+    connection.release();
     return c.html(
       c.views.renderAsync('pages/contact', {
         message: 'Successfully sent the message.'
