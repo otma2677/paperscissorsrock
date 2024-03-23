@@ -14,9 +14,6 @@ export function init() {
 
   if (!process.env.HOST)
     throw new Error('HOST is not set, in environment variables.');
-  //
-  // if (process.env.ANALYTICS === 'true' || process.env.ANALYTICS === 'false')
-  //   throw new Error('ANALYTICS is not set to true or false, in environment variables.');
 
   if (Number.isNaN(Number(process.env.GAME_MAX_GAME)))
     throw new Error('GAME_MAX_GAME is not set, in environment variables.');

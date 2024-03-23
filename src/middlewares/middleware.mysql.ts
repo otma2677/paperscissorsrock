@@ -15,21 +15,7 @@ import { Options } from '../server.js';
  *
  */
 export function middlewareMysql(options: Options['mysqlOptions']): MiddlewareHandler {
-  let connection: Promise<Connection>;
   let pool: Pool;
-
-  if (typeof options === 'string')
-    connection = createConnection(options);
-  if (typeof options === 'object') {
-    connection = createConnection({
-      host: options.host,
-      port: options.port,
-      user: options.user,
-      password: options.password,
-      database: options.database,
-      ssl: options.ssl
-    });
-  }
 
   if (typeof options === 'string')
     pool = createPool(options);
@@ -45,8 +31,14 @@ export function middlewareMysql(options: Options['mysqlOptions']): MiddlewareHan
   }
 
   return async function (c, next) {
-    c.mysql = await connection;
     c.mysqlPool = pool;
+
+    try {
+      await c.mysqlPool.ping();
+
+    } catch (err) {
+      await pool.connect();
+    }
 
     await next();
   };
@@ -57,7 +49,6 @@ export function middlewareMysql(options: Options['mysqlOptions']): MiddlewareHan
  */
 declare module 'hono' {
   interface Context {
-    mysql: Connection;
     mysqlPool: Pool;
   }
 }
