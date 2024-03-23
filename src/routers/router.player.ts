@@ -17,9 +17,9 @@ routerPlayer
     if (!user)
       throw new HTTPException(401, { message: 'Unauthorized' });
 
+    const connection = await c.mysqlPool.getConnection();
     // Find games played
-    const countRows = await c
-      .mysql
+    const countRows = await connection
       .query(
         'SELECT count(*) FROM games WHERE player1 = ? OR player2 = ?',
         [
@@ -32,7 +32,6 @@ routerPlayer
       throw new HTTPException(500, { message: 'Internal server error' });
 
     // Find recent games played (~ 5)
-    const connection = await c.mysqlPool.getConnection();
     const gameRows = await connection
       .query(
         `
