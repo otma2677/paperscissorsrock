@@ -26,19 +26,14 @@ export function middlewareMysql(options: Options['mysqlOptions']): MiddlewareHan
       user: options.user,
       password: options.password,
       database: options.database,
-      ssl: options.ssl
+      ssl: options.ssl,
+      waitForConnections: true,
+      enableKeepAlive: true,
     });
   }
 
   return async function (c, next) {
     c.mysqlPool = pool;
-
-    try {
-      await c.mysqlPool.ping();
-
-    } catch (err) {
-      await pool.connect();
-    }
 
     await next();
   };
